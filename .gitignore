@@ -1,3 +1,11 @@
-data/test_images
+builds/*
+!builds/.gitkeep
+
+facesets/*
+!facesets/.gitkeep
+
+data/trained_models/*
+!data/trained_models/.gitkeep
+
 .idea
 /cmake-build-debug/

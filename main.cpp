@@ -2,197 +2,211 @@
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
 #include "opencv2/videoio.hpp"
+#include <opencv2/opencv.hpp>
+#include <opencv2/face.hpp>
 #include <iostream>
+#include <filesystem>
+#include <string>
+#include <unordered_set>
+#include <unordered_map>
 
-using namespace std;
-using namespace cv;
+namespace fs = std::__fs::filesystem;
+std::string directoryPath = fs::current_path();
 
-void detectAndDraw( Mat& img, CascadeClassifier& cascade,
-                    CascadeClassifier& nestedCascade,
-                    double scale, bool tryflip );
+cv::CascadeClassifier faceCascade;
 
-string cascadeName;
-string nestedCascadeName;
+std::unordered_set<std::string> currentUsers;
+std::unordered_map<int, std::string> nameMappings;
 
-int main()
-{
-    VideoCapture capture;
-    Mat frame, image;
-    string inputName;
-    bool tryflip;
-    CascadeClassifier cascade, nestedCascade;
-    double scale;
+bool generateFaceset(const std::string& userName);
+bool trainFaceset();
+bool recogniseFaces();
 
+int main() {
 
-    cascadeName = "/Users/alfaloo/CLionProjects/CryptoFace/data/haarcascades/haarcascade_frontalface_alt.xml";
-    nestedCascadeName = "/Users/alfaloo/CLionProjects/CryptoFace/data/haarcascades/haarcascade_eye_tree_eyeglasses.xml";
-    scale = 1.3;
-    tryflip = false;
-
-    if (!nestedCascade.load(samples::findFileOrKeep(nestedCascadeName))) {
-        cerr << "WARNING: Could not load classifier cascade for nested objects" << endl;
+    if (!faceCascade.load(directoryPath + "/data/haarcascades/haarcascade_frontalface_alt.xml")) {
+        std::cout << "[Error] Could not load face cascade.\n";
+        return -1;
     }
-    if (!cascade.load(samples::findFile(cascadeName))) {
-        cerr << "ERROR: Could not load classifier cascade" << endl;
-    }
-    if( inputName.empty() || (isdigit(inputName[0]) && inputName.size() == 1) ) {
-        int camera = inputName.empty() ? 0 : inputName[0] - '0';
-        if (!capture.open(camera)) {
-            cout << "Capture from camera #" << camera << " didn't work" << endl;
-            return 1;
-        }
-    } else if (!inputName.empty()) {
-        image = imread(samples::findFileOrKeep(inputName), IMREAD_COLOR);
-        if (image.empty()) {
-            if (!capture.open(samples::findFileOrKeep(inputName))) {
-                cout << "Could not read " << inputName << endl;
-                return 1;
-            }
-        }
-    } else {
-        image = imread(samples::findFile("lena.jpg"), IMREAD_COLOR);
-        if (image.empty()) {
-            cout << "Couldn't read lena.jpg" << endl;
-            return 1;
+
+    for (const fs::directory_entry& entry : fs::directory_iterator(directoryPath + "/facesets")) {
+        if (fs::is_directory(entry)) {
+            currentUsers.insert(entry.path().filename().string());
         }
     }
 
-    if( capture.isOpened() ) {
-        cout << "Video capturing has been started ..." << endl;
+    std::string userName;
+    std::cout << "Please enter your name: ";
+    std::cin >> userName;
 
-        for(;;)
-        {
-            capture >> frame;
-            if( frame.empty() )
-                break;
-
-            Mat frame1 = frame.clone();
-            detectAndDraw( frame1, cascade, nestedCascade, scale, tryflip );
-
-            char c = (char)waitKey(10);
-            if( c == 27 || c == 'q' || c == 'Q' )
-                break;
-        }
-    } else {
-        cout << "Detecting face(s) in " << inputName << endl;
-        if( !image.empty() ) {
-            detectAndDraw( image, cascade, nestedCascade, scale, tryflip );
-            waitKey(0);
-        }
-        else if( !inputName.empty() ) {
-            /* assume it is a text file containing the
-            list of the image filenames to be processed - one per line */
-            FILE* f = fopen( inputName.c_str(), "rt" );
-            if( f )
-            {
-                char buf[1000+1];
-                while( fgets( buf, 1000, f ) )
-                {
-                    int len = (int)strlen(buf);
-                    while( len > 0 && isspace(buf[len-1]) )
-                        len--;
-                    buf[len] = '\0';
-                    cout << "file " << buf << endl;
-                    image = imread( buf, IMREAD_COLOR );
-                    if( !image.empty() )
-                    {
-                        detectAndDraw( image, cascade, nestedCascade, scale, tryflip );
-                        char c = (char)waitKey(0);
-                        if( c == 27 || c == 'q' || c == 'Q' )
-                            break;
-                    }
-                    else
-                    {
-                        cerr << "Aw snap, couldn't read image " << buf << endl;
-                    }
-                }
-                fclose(f);
-            }
+    if (currentUsers.count(userName) == 0) {
+        if (!generateFaceset(userName)) {
+            std::cout << "[Error] Could not generate facial data.\n";
+            return -1;
         }
     }
+
+    if (!trainFaceset()) {
+        std::cout << "[Error] Could not train facial data.\n";
+        return -1;
+    }
+
+    recogniseFaces();
 
     return 0;
 }
 
-void detectAndDraw( Mat& img, CascadeClassifier& cascade,
-                    CascadeClassifier& nestedCascade,
-                    double scale, bool tryflip ) {
-    double t = 0;
-    vector<Rect> faces, faces2;
-    const static Scalar colors[] = {Scalar(255,0,0),
-                                    Scalar(255,128,0),
-                                    Scalar(255,255,0),
-                                    Scalar(0,255,0),
-                                    Scalar(0,128,255),
-                                    Scalar(0,255,255),
-                                    Scalar(0,0,255),
-                                    Scalar(255,0,255)};
+bool generateFaceset(const std::string& userName) {
+    std::string userDir = "facesets/" + userName;
+    fs::create_directories(userDir);
 
-    Mat gray, smallImg;
+    int count = 0;
+    cv::Mat frame, gray;
+    std::vector<cv::Rect> faces;
 
-    cvtColor( img, gray, COLOR_BGR2GRAY );
-    double fx = 1 / scale;
-    resize( gray, smallImg, Size(), fx, fx, INTER_LINEAR_EXACT );
-    equalizeHist( smallImg, smallImg );
+    cv::VideoCapture videoCapture(0);
+    if (!videoCapture.isOpened()) {
+        std::cout << "[Error] Could not open video capture.\n";
+        return -1;
+    }
 
-    t = (double)getTickCount();
-    cascade.detectMultiScale( smallImg, faces,
-                              1.1, 2, 0
-                                      //|CASCADE_FIND_BIGGEST_OBJECT
-                                      //|CASCADE_DO_ROUGH_SEARCH
-                                      |CASCADE_SCALE_IMAGE,
-                              Size(30, 30) );
-    if(tryflip) {
-        flip(smallImg, smallImg, 1);
-        cascade.detectMultiScale( smallImg, faces2,
-                                  1.1, 2, 0
-                                          //|CASCADE_FIND_BIGGEST_OBJECT
-                                          //|CASCADE_DO_ROUGH_SEARCH
-                                          |CASCADE_SCALE_IMAGE,
-                                  Size(30, 30) );
-        for( vector<Rect>::const_iterator r = faces2.begin(); r != faces2.end(); ++r ) {
-            faces.push_back(Rect(smallImg.cols - r->x - r->width, r->y, r->width, r->height));
+    std::cout << "[INFO] Facial registration initiating, please stay still.\n";
+    std::cout << "[INFO] Press 's' to take facial capture 5 times.\n";
+
+    while (count < 5) {
+        videoCapture >> frame;
+        if (frame.empty()) {
+            std::cout << "[Error] No captured frame." << std::endl;
+            return false;
+        }
+
+        cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+        faceCascade.detectMultiScale(gray, faces, 1.1, 5, 0, cv::Size(50, 50));
+
+        for (const cv::Rect_<int>& face : faces) {
+            cv::rectangle(frame, face, cv::Scalar(0, 255, 0), 2);
+        }
+
+        cv::imshow("Identified Face", frame);
+        char key = (char) cv::waitKey(1);
+
+        if (key == 's' && count < 5) {
+            if (faces.empty()) {
+                std::cout << "[Note] No faces detected, please try again.\n";
+                continue;
+            } else if (faces.size() > 1) {
+                std::cout << "[Note] Multiple faces detected, please try again.\n";
+                continue;
+            } else {
+                cv::Mat roi = frame(faces[0]); // Ensure at least one face has been detected.
+                std::string imgPath = userDir + "/" + userName + "_" + std::to_string(count) + ".png";
+                if (roi.empty()) {
+                    std::cout << "[Error]: ROI is empty, try again." << std::endl;
+                    continue;
+                }
+                cv::imwrite(imgPath, roi);
+                std::cout << "[INFO] Image " << count << " has been saved in folder: " << userName << "\n";
+                count++;
+            }
+        } else if (key == 'q') {
+            fs::remove_all(userDir);
+            return false;
         }
     }
-    t = (double)getTickCount() - t;
-    printf( "detection time = %g ms\n", t*1000/getTickFrequency());
-    for ( size_t i = 0; i < faces.size(); i++ ) {
-        Rect r = faces[i];
-        Mat smallImgROI;
-        vector<Rect> nestedObjects;
-        Point center;
-        Scalar color = colors[i%8];
-        int radius;
 
-        double aspect_ratio = (double)r.width/r.height;
-        if( 0.75 < aspect_ratio && aspect_ratio < 1.3 ) {
-            center.x = cvRound((r.x + r.width*0.5)*scale);
-            center.y = cvRound((r.y + r.height*0.5)*scale);
-            radius = cvRound((r.width + r.height)*0.25*scale);
-            circle( img, center, radius, color, 3, 8, 0 );
-        } else {
-            rectangle(img, Point(cvRound(r.x*scale), cvRound(r.y*scale)),
-                       Point(cvRound((r.x + r.width-1)*scale), cvRound((r.y + r.height-1)*scale)),
-                       color, 3, 8, 0);
-        }
-        if( nestedCascade.empty() ) {
-            continue;
-        }
-        smallImgROI = smallImg( r );
-        nestedCascade.detectMultiScale( smallImgROI, nestedObjects,
-                                        1.1, 2, 0
-                                                //|CASCADE_FIND_BIGGEST_OBJECT
-                                                //|CASCADE_DO_ROUGH_SEARCH
-                                                //|CASCADE_DO_CANNY_PRUNING
-                                                |CASCADE_SCALE_IMAGE,
-                                        Size(30, 30) );
-        for ( size_t j = 0; j < nestedObjects.size(); j++ ) {
-            Rect nr = nestedObjects[j];
-            center.x = cvRound((r.x + nr.x + nr.width*0.5)*scale);
-            center.y = cvRound((r.y + nr.y + nr.height*0.5)*scale);
-            radius = cvRound((nr.width + nr.height)*0.25*scale);
-            circle( img, center, radius, color, 3, 8, 0 );
+    std::cout << "[INFO] Dataset has been created for " << userName << std::endl;
+
+    videoCapture.release();
+    cv::destroyAllWindows();
+
+    return true;
+}
+
+std::vector<cv::Mat> readImages(const std::string& directory, std::vector<int>& labels) {
+    std::vector<cv::Mat> images;
+    int idx = 0;
+    for (const auto& entry : fs::directory_iterator(directory)) {
+        if (fs::is_directory(entry)) {  // Check if the entry is a directory
+            for (const auto& file : fs::directory_iterator(entry.path())) {
+                cv::Mat img = cv::imread(file.path().string(), cv::IMREAD_GRAYSCALE);
+                if (!img.empty()) {
+                    nameMappings[idx] = entry.path().filename().string();
+                    images.push_back(img);
+                    labels.push_back(idx);
+                }
+            }
+            idx++;
         }
     }
-    imshow( "result", img );
+    return images;
+}
+
+bool trainFaceset() {
+    std::vector<int> labels;
+    std::vector<cv::Mat> images = readImages("facesets/", labels);
+
+    if (images.size() > 0) {
+        std::cout << "[INFO] Initialising the classifier\n";
+
+        cv::Ptr<cv::face::LBPHFaceRecognizer> model = cv::face::LBPHFaceRecognizer::create();
+        model->train(images, labels);
+
+        model->save("data/trained_models/face_classifier.yml");
+        std::cout << "[INFO] Training Complete\n";
+    } else {
+        std::cout << "[ERROR] No images found for training.\n";
+        return false;
+    }
+
+    return true;
+}
+
+bool recogniseFaces() {
+    cv::Ptr<cv::face::LBPHFaceRecognizer> recognizer = cv::face::LBPHFaceRecognizer::create();
+    recognizer->read("data/trained_models/face_classifier.yml");
+
+    cv::VideoCapture videoCapture(0);
+    if (!videoCapture.isOpened()) {
+        std::cout << "[Error] Could not open video capture.\n";
+        return -1;
+    }
+
+    cv::Mat frame;
+    std::cout << "[Info] Starting facial recognition, press 'q' to quit." << std::endl;
+
+    while (videoCapture.read(frame)) {
+        if (frame.empty()) {
+            std::cout << "[Error] No captured frame." << std::endl;
+            return false;
+        }
+
+        cv::Mat gray;
+        cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+        std::vector<cv::Rect> faces;
+        faceCascade.detectMultiScale(gray, faces, 1.2, 5, 0, cv::Size(100, 100));
+
+        for (const cv::Rect_<int>& face : faces) {
+            cv::rectangle(frame, face, cv::Scalar(0, 255, 0), 2);
+            cv::Mat faceROI = gray(face);
+            int label;
+            double confidence;
+            recognizer->predict(faceROI, label, confidence);
+            std::string text = "Unknown";
+
+            if (label >= 0 && label <= nameMappings.size()) {
+                text = nameMappings[label];
+            }
+
+            cv::putText(frame, text, cv::Point(face.x, face.y - 4), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(0, 255, 0), 1, cv::LINE_AA);
+        }
+
+        cv::imshow("Recognise", frame);
+        if (cv::waitKey(10) == 'q') {
+            break;
+        }
+    }
+
+    videoCapture.release();
+    cv::destroyAllWindows();
+    return true;
 }
