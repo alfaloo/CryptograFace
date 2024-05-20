@@ -191,6 +191,7 @@ bool recogniseFaces() {
             int label;
             double confidence;
             recognizer->predict(faceROI, label, confidence);
+            std::cout << confidence << "\n";
             std::string text = "Unknown";
 
             if (label >= 0 && label <= nameMappings.size()) {

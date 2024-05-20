@@ -13,13 +13,13 @@ executable="${file_name%.*}"
 # Directory where executables will be stored
 build_dir="./builds"
 
-# Create the builds directory if it doesn't exist
+# Create the build directory if it doesn't exist
 if [ ! -d "$build_dir" ]; then
     mkdir "$build_dir"
 fi
 
 # Compile the C++ file with g++ and OpenCV
-g++ -std=c++11 "$file_name" -o "$build_dir/$executable" `pkg-config --cflags --libs opencv4`
+g++ -std=c++11 "$file_name" -o "$build_dir/$executable" `pkg-config --cflags --libs opencv4` -I/opt/homebrew/Cellar/cryptopp/8.9.0/include/cryptopp -L/opt/homebrew/Cellar/cryptopp/8.9.0/lib -lcryptopp
 if [ $? -ne 0 ]; then
     echo "Compilation failed."
     exit 1
