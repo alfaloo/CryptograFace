@@ -81,7 +81,8 @@ bool generateFaceset(const std::string& userName) {
         }
 
         cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
-        faceCascade.detectMultiScale(gray, faces, 1.1, 5, 0, cv::Size(50, 50));
+        cv::equalizeHist(gray, gray);
+        faceCascade.detectMultiScale(gray, faces, 1.1, 5, 0, cv::Size(200, 200));
 
         for (const cv::Rect_<int>& face : faces) {
             cv::rectangle(frame, face, cv::Scalar(0, 255, 0), 2);
@@ -90,7 +91,7 @@ bool generateFaceset(const std::string& userName) {
         cv::imshow("Identified Face", frame);
         char key = (char) cv::waitKey(1);
 
-        if (key == 's' && count < 5) {
+        if (key == 's') {
             if (faces.empty()) {
                 std::cout << "[Note] No faces detected, please try again.\n";
                 continue;
@@ -98,7 +99,7 @@ bool generateFaceset(const std::string& userName) {
                 std::cout << "[Note] Multiple faces detected, please try again.\n";
                 continue;
             } else {
-                cv::Mat roi = frame(faces[0]); // Ensure at least one face has been detected.
+                cv::Mat roi = gray(faces[0]);
                 std::string imgPath = userDir + "/" + userName + "_" + std::to_string(count) + ".png";
                 if (roi.empty()) {
                     std::cout << "[Error]: ROI is empty, try again." << std::endl;
@@ -182,8 +183,9 @@ bool recogniseFaces() {
 
         cv::Mat gray;
         cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+        cv::equalizeHist(gray, gray);
         std::vector<cv::Rect> faces;
-        faceCascade.detectMultiScale(gray, faces, 1.2, 5, 0, cv::Size(100, 100));
+        faceCascade.detectMultiScale(gray, faces, 1.1, 5, 0, cv::Size(200, 200));
 
         for (const cv::Rect_<int>& face : faces) {
             cv::rectangle(frame, face, cv::Scalar(0, 255, 0), 2);
