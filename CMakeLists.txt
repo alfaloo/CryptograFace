@@ -16,9 +16,13 @@ include_directories(${CRYPTO++_INCLUDE_DIR})
 
 link_directories(/opt/homebrew/Cellar/cryptopp/8.9.0/lib)
 
-add_executable(FacialRecognision main.cpp)
-add_executable(Cryptography crypt.cpp)
+add_executable(FacialRecognision facial.cpp)
+add_executable(Cryptography cryptography.cpp)
+add_executable(Encrypt encrypt.cpp)
+add_executable(Decrypt decrypt.cpp)
 
 # Link both OpenCV and Crypto++ libraries
 target_link_libraries(FacialRecognision ${OpenCV_LIBS} ${CRYPTO++_LIBRARY})
 target_link_libraries(Cryptography ${OpenCV_LIBS} ${CRYPTO++_LIBRARY})
+target_link_libraries(Encrypt ${OpenCV_LIBS} ${CRYPTO++_LIBRARY})
+target_link_libraries(Decrypt ${OpenCV_LIBS} ${CRYPTO++_LIBRARY})

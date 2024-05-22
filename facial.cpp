@@ -37,7 +37,7 @@ int main() {
 
     std::string userName;
     std::cout << "Please enter your name: ";
-    std::cin >> userName;
+    std::getline(std::cin, userName);
 
     if (currentUsers.count(userName) == 0) {
         if (!generateFaceset(userName)) {
