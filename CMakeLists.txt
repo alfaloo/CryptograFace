@@ -20,9 +20,11 @@ add_executable(FacialRecognision facial.cpp)
 add_executable(Cryptography cryptography.cpp)
 add_executable(Encrypt encrypt.cpp)
 add_executable(Decrypt decrypt.cpp)
+add_executable(Test test.cpp)
 
 # Link both OpenCV and Crypto++ libraries
 target_link_libraries(FacialRecognision ${OpenCV_LIBS} ${CRYPTO++_LIBRARY})
 target_link_libraries(Cryptography ${OpenCV_LIBS} ${CRYPTO++_LIBRARY})
 target_link_libraries(Encrypt ${OpenCV_LIBS} ${CRYPTO++_LIBRARY})
 target_link_libraries(Decrypt ${OpenCV_LIBS} ${CRYPTO++_LIBRARY})
+target_link_libraries(Test ${OpenCV_LIBS} ${CRYPTO++_LIBRARY})

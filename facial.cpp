@@ -9,6 +9,7 @@
 #include <string>
 #include <unordered_set>
 #include <unordered_map>
+#include <thread>
 
 namespace fs = std::__fs::filesystem;
 std::string directoryPath = fs::current_path();
@@ -18,7 +19,7 @@ cv::CascadeClassifier faceCascade;
 std::unordered_set<std::string> currentUsers;
 std::unordered_map<int, std::string> nameMappings;
 
-bool generateFaceset(const std::string& userName);
+bool generateFaceset(const std::string& userName, int clicks, int amount);
 bool trainFaceset();
 bool recogniseFaces();
 
@@ -40,7 +41,7 @@ int main() {
     std::getline(std::cin, userName);
 
     if (currentUsers.count(userName) == 0) {
-        if (!generateFaceset(userName)) {
+        if (!generateFaceset(userName, 5, 10)) {
             std::cout << "[Error] Could not generate facial data.\n";
             return -1;
         }
@@ -56,13 +57,53 @@ int main() {
     return 0;
 }
 
-bool generateFaceset(const std::string& userName) {
-    std::string userDir = "facesets/" + userName;
-    fs::create_directories(userDir);
+void captureImages(const std::string& userName, const std::string& userDir, int amount, int threadCount) {
+    cv::VideoCapture videoCapture(0);
+    if (!videoCapture.isOpened()) {
+        std::cout << "[Error] Could not open video capture.\n";
+        return;
+    }
 
-    int count = 0;
+    int imageCount = 0;
     cv::Mat frame, gray;
     std::vector<cv::Rect> faces;
+
+    while (imageCount < amount) {
+        videoCapture >> frame;
+        if (frame.empty()) {
+            std::cout << "[Error] No captured frame." << std::endl;
+            return;
+        }
+
+        cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+        cv::equalizeHist(gray, gray);
+        faceCascade.detectMultiScale(gray, faces, 1.1, 5, 0, cv::Size(200, 200));
+
+        if (faces.empty()) {
+            std::cout << "[Note] No faces detected, please try again.\n";
+            continue;
+        } else if (faces.size() > 1) {
+            std::cout << "[Note] Multiple faces detected, please try again.\n";
+            continue;
+        } else {
+            cv::Mat roi = gray(faces[0]);
+            if (roi.empty()) {
+                std::cout << "[Error]: ROI is empty, try again." << std::endl;
+                continue;
+            }
+            std::string imgPath = userDir + "/" + userName + "_" + std::to_string(threadCount) + "." + std::to_string(imageCount) + ".png";
+            cv::imwrite(imgPath, roi);
+            std::cout << "[INFO] Image " << std::to_string(threadCount) + "." + std::to_string(imageCount) << " has been saved in folder: " << userName << "\n";
+
+            std::this_thread::sleep_for(std::chrono::milliseconds (200));
+            imageCount++;
+        }
+    }
+}
+
+bool generateFaceset(const std::string& userName, int clicks, int amount) {
+    std::string userDir = "facesets/" + userName;
+    fs::create_directories(userDir);
 
     cv::VideoCapture videoCapture(0);
     if (!videoCapture.isOpened()) {
@@ -73,7 +114,13 @@ bool generateFaceset(const std::string& userName) {
     std::cout << "[INFO] Facial registration initiating, please stay still.\n";
     std::cout << "[INFO] Press 's' to take facial capture 5 times.\n";
 
-    while (count < 5) {
+    int threadCount = 0;
+    cv::Mat frame, gray;
+    std::vector<cv::Rect> faces;
+
+    std::vector<std::thread> imageCaptureThreads;
+
+    while (threadCount < clicks) {
         videoCapture >> frame;
         if (frame.empty()) {
             std::cout << "[Error] No captured frame." << std::endl;
@@ -81,7 +128,6 @@ bool generateFaceset(const std::string& userName) {
         }
 
         cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
-        cv::equalizeHist(gray, gray);
         faceCascade.detectMultiScale(gray, faces, 1.1, 5, 0, cv::Size(200, 200));
 
         for (const cv::Rect_<int>& face : faces) {
@@ -92,33 +138,24 @@ bool generateFaceset(const std::string& userName) {
         char key = (char) cv::waitKey(1);
 
         if (key == 's') {
-            if (faces.empty()) {
-                std::cout << "[Note] No faces detected, please try again.\n";
-                continue;
-            } else if (faces.size() > 1) {
-                std::cout << "[Note] Multiple faces detected, please try again.\n";
-                continue;
-            } else {
-                cv::Mat roi = gray(faces[0]);
-                std::string imgPath = userDir + "/" + userName + "_" + std::to_string(count) + ".png";
-                if (roi.empty()) {
-                    std::cout << "[Error]: ROI is empty, try again." << std::endl;
-                    continue;
-                }
-                cv::imwrite(imgPath, roi);
-                std::cout << "[INFO] Image " << count << " has been saved in folder: " << userName << "\n";
-                count++;
-            }
+            imageCaptureThreads.push_back(std::thread(captureImages, userName, userDir, amount, threadCount));
+            threadCount++;
         } else if (key == 'q') {
             fs::remove_all(userDir);
             return false;
         }
     }
 
-    std::cout << "[INFO] Dataset has been created for " << userName << std::endl;
-
     videoCapture.release();
     cv::destroyAllWindows();
+
+    for (std::thread& thread : imageCaptureThreads) {
+        if (thread.joinable()) {
+            thread.join();
+        }
+    }
+
+    std::cout << "[INFO] Dataset has been created for " << userName << std::endl;
 
     return true;
 }
