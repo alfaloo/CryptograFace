@@ -20,6 +20,7 @@ bool generateFaceset(const std::string& userName, int clicks, int amount);
 std::vector<cv::Mat> readImages(const std::string& directory, std::vector<int>& labels);
 bool trainFaceset();
 bool recogniseFaces();
+bool authenticateFace(std::string username, int threshold);
 
 extern cv::CascadeClassifier faceCascade;
 extern std::unordered_set<std::string> currentUsers;

@@ -21,6 +21,7 @@ void captureImages(const std::string& userName, const std::string& userDir, int 
         videoCapture >> frame;
         if (frame.empty()) {
             std::cout << "[Error] No captured frame." << std::endl;
+            videoCapture.release();
             return;
         }
 
@@ -57,7 +58,7 @@ bool generateFaceset(const std::string& userName, int clicks, int amount) {
     cv::VideoCapture videoCapture(0);
     if (!videoCapture.isOpened()) {
         std::cout << "[Error] Could not open video capture.\n";
-        return -1;
+        return false;
     }
 
     std::cout << "[INFO] Facial registration initiating, please stay still.\n";
@@ -73,6 +74,8 @@ bool generateFaceset(const std::string& userName, int clicks, int amount) {
         videoCapture >> frame;
         if (frame.empty()) {
             std::cout << "[Error] No captured frame." << std::endl;
+            videoCapture.release();
+            cv::destroyAllWindows();
             return false;
         }
 
@@ -91,6 +94,8 @@ bool generateFaceset(const std::string& userName, int clicks, int amount) {
             threadCount++;
         } else if (key == 'q') {
             fs::remove_all(userDir);
+            videoCapture.release();
+            cv::destroyAllWindows();
             return false;
         }
     }
@@ -155,7 +160,7 @@ bool recogniseFaces() {
     cv::VideoCapture videoCapture(0);
     if (!videoCapture.isOpened()) {
         std::cout << "[Error] Could not open video capture.\n";
-        return -1;
+        return false;
     }
 
     cv::Mat frame;
@@ -164,6 +169,8 @@ bool recogniseFaces() {
     while (videoCapture.read(frame)) {
         if (frame.empty()) {
             std::cout << "[Error] No captured frame." << std::endl;
+            videoCapture.release();
+            cv::destroyAllWindows();
             return false;
         }
 
@@ -198,4 +205,62 @@ bool recogniseFaces() {
     videoCapture.release();
     cv::destroyAllWindows();
     return true;
+}
+
+bool authenticateFace(std::string username, int threshold) {
+    cv::Ptr<cv::face::LBPHFaceRecognizer> recognizer = cv::face::LBPHFaceRecognizer::create();
+    recognizer->read("data/trained_models/face_classifier.yml");
+
+    cv::VideoCapture videoCapture(0);
+    if (!videoCapture.isOpened()) {
+        std::cout << "[Error] Could not open video capture.\n";
+        return false;
+    }
+
+    cv::Mat frame;
+    std::cout << "[Info] Starting facial recognition, press 'q' to quit." << std::endl;
+
+    while (videoCapture.read(frame)) {
+        if (frame.empty()) {
+            std::cout << "[Error] No captured frame." << std::endl;
+            videoCapture.release();
+            cv::destroyAllWindows();
+            return false;
+        }
+
+        cv::Mat gray;
+        cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+        cv::equalizeHist(gray, gray);
+        std::vector<cv::Rect> faces;
+        faceCascade.detectMultiScale(gray, faces, 1.1, 5, 0, cv::Size(200, 200));
+
+        for (const cv::Rect_<int>& face : faces) {
+            cv::rectangle(frame, face, cv::Scalar(0, 255, 0), 2);
+            cv::Mat faceROI = gray(face);
+            int label;
+            double confidence;
+            recognizer->predict(faceROI, label, confidence);
+            std::cout << confidence << "\n";
+            std::string text = "";
+
+            if (label >= 0 && label <= nameMappings.size()) {
+                text = nameMappings[label];
+            }
+
+            if (text == username && confidence < threshold) {
+                videoCapture.release();
+                cv::destroyAllWindows();
+                return true;
+            }
+        }
+
+        cv::imshow("Recognise", frame);
+        if (cv::waitKey(10) == 'q') {
+            break;
+        }
+    }
+
+    videoCapture.release();
+    cv::destroyAllWindows();
+    return false;
 }

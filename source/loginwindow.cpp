@@ -1,5 +1,6 @@
 #include <QDebug>
 #include "../headers/loginwindow.h"
+#include "../headers/notepadwindow.h"
 #include "./ui_loginwindow.h"
 
 #include "../headers/facialrecognision.h"
@@ -50,10 +51,10 @@ void LoginWindow::on_btnLogin_clicked()
         return;
     }
 
-//    // Transition to another window
-//    SecondWindow* secondWindow = new SecondWindow();
-//    secondWindow->show();
-//
-//    this->close();
+    if (authenticateFace(username, 30)) {
+        NotepadWindow* notepadwindow = new NotepadWindow();
+        notepadwindow->show();
+        this->close();
+    }
 }
 

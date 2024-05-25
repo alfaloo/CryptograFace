@@ -63,6 +63,10 @@ set(PROJECT_SOURCES
         headers/loginwindow.h
         ui/loginwindow.ui
 
+        source/notepadwindow.cpp
+        headers/notepadwindow.h
+        ui/notepadwindow.ui
+
         source/facialrecognision.cpp
         source/globals.cpp
         headers/facialrecognision.h
