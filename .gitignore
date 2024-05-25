@@ -9,6 +9,8 @@ data/trained_models/*
 
 .idea
 /cmake-build-debug/
+.qtc_clangd
+.vscode
 
 
 https://cryptopp.com/wiki/Advanced_Encryption_Standard
