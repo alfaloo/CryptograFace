@@ -8,8 +8,6 @@
 namespace fs = std::__fs::filesystem;
 std::string directoryPath = fs::current_path();
 
-std::unordered_set<std::string> currentUsers;
-
 int main() {
 
     if (!faceCascade.load(directoryPath + "/data/haarcascades/haarcascade_frontalface_alt.xml")) {

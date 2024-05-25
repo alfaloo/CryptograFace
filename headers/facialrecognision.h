@@ -22,4 +22,5 @@ bool trainFaceset();
 bool recogniseFaces();
 
 extern cv::CascadeClassifier faceCascade;
+extern std::unordered_set<std::string> currentUsers;
 extern std::unordered_map<int, std::string> nameMappings;

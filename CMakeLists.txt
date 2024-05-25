@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.9)
-project(CryptograFace)
+project(CryptograFace VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -45,8 +45,6 @@ target_link_libraries(Test ${OpenCV_LIBS} ${CRYPTO++_LIBRARY} ${DLIB_LIBRARY} "-
 
 cmake_minimum_required(VERSION 3.5)
 
-project(CryptograFace-GUI VERSION 0.1 LANGUAGES CXX)
-
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -64,10 +62,14 @@ set(PROJECT_SOURCES
         source/loginwindow.cpp
         headers/loginwindow.h
         ui/loginwindow.ui
+
+        source/facialrecognision.cpp
+        source/globals.cpp
+        headers/facialrecognision.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(CryptograFace-GUI
+    qt_add_executable(CryptograFace
             MANUAL_FINALIZATION
             ${PROJECT_SOURCES}
     )
@@ -77,27 +79,27 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     # For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
 else()
     if(ANDROID)
-        add_library(CryptograFace-GUI SHARED
+        add_library(CryptograFace SHARED
                 ${PROJECT_SOURCES}
         )
         # Define properties for Android with Qt 5 after find_package() calls as:
         #    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
     else()
-        add_executable(CryptograFace-GUI
+        add_executable(CryptograFace
                 ${PROJECT_SOURCES}
         )
     endif()
 endif()
 
-target_link_libraries(CryptograFace-GUI PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(CryptograFace PRIVATE Qt${QT_VERSION_MAJOR}::Widgets ${OpenCV_LIBS} ${CRYPTO++_LIBRARY})
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
 # explicit, fixed bundle identifier manually though.
 if(${QT_VERSION} VERSION_LESS 6.1.0)
-    set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.CryptograFace-GUI)
+    set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.CryptograFace)
 endif()
-set_target_properties(CryptograFace-GUI PROPERTIES
+set_target_properties(CryptograFace PROPERTIES
         ${BUNDLE_ID_OPTION}
         MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
         MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
@@ -106,12 +108,12 @@ set_target_properties(CryptograFace-GUI PROPERTIES
 )
 
 include(GNUInstallDirs)
-install(TARGETS CryptograFace-GUI
+install(TARGETS CryptograFace
         BUNDLE DESTINATION .
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
 if(QT_VERSION_MAJOR EQUAL 6)
-    qt_finalize_executable(CryptograFace-GUI)
+    qt_finalize_executable(CryptograFace)
 endif()
