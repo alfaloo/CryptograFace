@@ -1,16 +1,22 @@
 cmake_minimum_required(VERSION 3.9)
 project(CryptograFace VERSION 0.1 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_BUILD_TYPE Release)
+
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
 
 # Set the C++ compiler flags for Release build
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
 # Find OpenCV
 find_package(OpenCV REQUIRED)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
 # Include directories for OpenCV
 
@@ -26,39 +32,11 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 include_directories(${CRYPTO++_INCLUDE_DIR})
 include_directories(${DLIB_INCLUDE_DIR})
 
-add_executable(FacialRecognision facial.cpp headers/facialrecognision.h source/facialrecognision.cpp source/globals.cpp)
-add_executable(Cryptography cryptography.cpp)
-add_executable(Encrypt encrypt.cpp)
-add_executable(Decrypt decrypt.cpp)
-add_executable(Test test.cpp)
-
-# Link both OpenCV and Crypto++ libraries
-target_link_libraries(FacialRecognision ${OpenCV_LIBS} ${CRYPTO++_LIBRARY})
-target_link_libraries(Cryptography ${OpenCV_LIBS} ${CRYPTO++_LIBRARY})
-target_link_libraries(Encrypt ${OpenCV_LIBS} ${CRYPTO++_LIBRARY})
-target_link_libraries(Decrypt ${OpenCV_LIBS} ${CRYPTO++_LIBRARY})
-target_link_libraries(Test ${OpenCV_LIBS} ${CRYPTO++_LIBRARY} ${DLIB_LIBRARY} "-framework Accelerate")
-
-
-
-
-
-cmake_minimum_required(VERSION 3.5)
-
-set(CMAKE_AUTOUIC ON)
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
-
 set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_CURRENT_SOURCE_DIR}/ui)
 
 set(PROJECT_SOURCES
         source/main.cpp
+
         source/loginwindow.cpp
         headers/loginwindow.h
         ui/loginwindow.ui
@@ -68,8 +46,12 @@ set(PROJECT_SOURCES
         ui/notepadwindow.ui
 
         source/facialrecognision.cpp
-        source/globals.cpp
         headers/facialrecognision.h
+
+        source/cryptography.cpp
+        headers/cryptography.h
+
+        source/globals.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

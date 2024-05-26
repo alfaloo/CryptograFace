@@ -18,12 +18,14 @@ QT_END_NAMESPACE
 class NotepadWindow : public QMainWindow
 {
 Q_OBJECT
-
+private:
+    std::string username;
 public:
-    NotepadWindow(QWidget *parent = nullptr);
+    NotepadWindow(std::string username, QWidget *parent = nullptr);
     ~NotepadWindow();
     Ui::NotepadWindow *ui;
 private slots:
-
+    void on_btnSave_clicked();
+    void on_btnExit_clicked();
 };
 #endif // NOTEPADWINDOW_H

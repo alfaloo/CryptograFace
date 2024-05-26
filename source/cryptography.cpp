@@ -1,39 +1,10 @@
-#include "cryptlib.h"
-#include "rijndael.h"
-#include "modes.h"
-#include "files.h"
-#include "osrng.h"
-#include "hex.h"
-#include "eax.h"
+//
+// Created by Zhiyang Lu on 26/05/2024.
+//
 
-#include <iostream>
-#include <fstream>
-#include <string>
+#include "../headers/cryptography.h"
 
-bool encrypt(std::string plain);
-std::string decrypt();
-
-int main() {
-    std::string plain;
-    std::cout << "Please enter your plain text: ";
-    std::getline(std::cin, plain);  // Use getline to read the whole line
-
-    if (!encrypt(plain)) {
-        std::cerr << "[Error] Could not perform encryption.\n";
-    }
-
-    std::string confirmation;
-    std::cout << "Press enter to reveal recovered text: ";
-    std::getline(std::cin, confirmation); // Also use getline here if expecting to press enter only
-
-    std::string recovered = decrypt();
-
-    std::cout << recovered << "\n";
-
-    return 0;
-}
-
-bool encrypt(std::string plain) {
+bool encrypt(std::string username, std::string plain) {
     // Create key and initialisation vector
     CryptoPP::AutoSeededRandomPool prng;
     CryptoPP::SecByteBlock key(CryptoPP::AES::DEFAULT_KEYLENGTH);
@@ -42,9 +13,9 @@ bool encrypt(std::string plain) {
     prng.GenerateBlock(key, key.size());
     prng.GenerateBlock(iv, iv.size());
 
-    std::ofstream credentialsFile("credentials.txt");
+    std::ofstream credentialsFile("credentials/" + username + "Credentials.txt");
     if (!credentialsFile.is_open()) {
-        std::cerr << "[Error] Failed to open file for credentials.\n";
+        std::cerr << "Failed to open file for credentials." << std::endl;
         return false;
     }
 
@@ -74,13 +45,13 @@ bool encrypt(std::string plain) {
                                ) // AuthenticatedEncryptionFilter
         ); // StringSource
     } catch (const CryptoPP::Exception &e) {
-        std::cerr << "[Error] " << e.what() << "\n";
+        std::cerr << e.what() << std::endl;
         return false;
     }
 
-    std::ofstream cipherFile("cipher.txt");
+    std::ofstream cipherFile("ciphers/" + username + "Cipher.txt");
     if (!cipherFile.is_open()) {
-        std::cerr << "[Error ]Failed to open file for cipher.\n";
+        std::cerr << "Failed to open file for cipher." << std::endl;
         return false;
     }
 
@@ -91,15 +62,15 @@ bool encrypt(std::string plain) {
 
     cipherFile.close();
 
-    std::cout << "[Info] Encryption complete.\n";
+    std::cout << "Encryption complete\n";
 
     return true;
 }
 
-std::string decrypt() {
-    std::ifstream credentialsFile("credentials.txt");
+std::string decrypt(std::string username) {
+    std::ifstream credentialsFile("credentials/" + username + "Credentials.txt");
     if (!credentialsFile.is_open()) {
-        std::cerr << "[Error] Failed to open credentials file.\n";
+        std::cerr << "Failed to open credentials file." << std::endl;
         return "";
     }
 
@@ -123,13 +94,9 @@ std::string decrypt() {
     ivDecoder.MessageEnd();
     ivDecoder.Get(iv, iv.size());
 
-    // Decrypt using key and IV...
-    // Rest of decryption code
-
-
-    std::ifstream cipherFile("cipher.txt");
+    std::ifstream cipherFile("ciphers/" + username + "Cipher.txt");
     if (!cipherFile.is_open()) {
-        std::cerr << "[Error] Failed to open cipher file.\n";
+        std::cerr << "Failed to open cipher file." << std::endl;
         return "";
     }
 
@@ -160,7 +127,7 @@ std::string decrypt() {
     }
     catch(const CryptoPP::Exception& e)
     {
-        std::cerr << "[Error] " << e.what() << "\n";
+        std::cerr << e.what() << std::endl;
         return "";
     }
 

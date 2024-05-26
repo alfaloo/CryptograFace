@@ -52,7 +52,7 @@ void LoginWindow::on_btnLogin_clicked()
     }
 
     if (authenticateFace(username, 30)) {
-        NotepadWindow* notepadwindow = new NotepadWindow();
+        NotepadWindow* notepadwindow = new NotepadWindow(username);
         notepadwindow->show();
         this->close();
     }

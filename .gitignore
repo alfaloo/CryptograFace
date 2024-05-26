@@ -7,6 +7,12 @@ facesets/*
 data/trained_models/*
 !data/trained_models/.gitkeep
 
+credentials/*
+!credentials/.gitkeep
+
+ciphers/*
+!ciphers/.gitkeep
+
 .idea
 /cmake-build-debug/
 .qtc_clangd
