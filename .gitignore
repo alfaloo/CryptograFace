@@ -1,17 +1,17 @@
 build/*
 !build/.gitkeep
 
-facesets/*
-!facesets/.gitkeep
+data/facesets/*
+!data/facesets/.gitkeep
 
 data/trained_models/*
 !data/trained_models/.gitkeep
 
-credentials/*
-!credentials/.gitkeep
+data/credentials/*
+!data/credentials/.gitkeep
 
-ciphers/*
-!ciphers/.gitkeep
+data/ciphers/*
+!data/ciphers/.gitkeep
 
 .idea
 /cmake-build-debug/

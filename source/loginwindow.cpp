@@ -33,7 +33,7 @@ void LoginWindow::on_btnLogin_clicked()
         return;
     }
 
-    for (const fs::directory_entry& entry : fs::directory_iterator(directoryPath + "/facesets")) {
+    for (const fs::directory_entry& entry : fs::directory_iterator(directoryPath + "/data/facesets")) {
         if (fs::is_directory(entry)) {
             currentUsers.insert(entry.path().filename().string());
         }

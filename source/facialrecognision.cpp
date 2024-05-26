@@ -52,7 +52,7 @@ void captureImages(const std::string& userName, const std::string& userDir, int 
 }
 
 bool generateFaceset(const std::string& userName, int clicks, int amount) {
-    std::string userDir = "facesets/" + userName;
+    std::string userDir = "data/facesets/" + userName;
     fs::create_directories(userDir);
 
     cv::VideoCapture videoCapture(0);
@@ -135,7 +135,7 @@ std::vector<cv::Mat> readImages(const std::string& directory, std::vector<int>& 
 
 bool trainFaceset() {
     std::vector<int> labels;
-    std::vector<cv::Mat> images = readImages("facesets/", labels);
+    std::vector<cv::Mat> images = readImages("data/facesets/", labels);
 
     if (images.size() > 0) {
         std::cout << "[INFO] Initialising the classifier\n";
