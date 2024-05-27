@@ -6,7 +6,6 @@
 #include "../headers/facialrecognision.h"
 
 namespace fs = std::__fs::filesystem;
-std::string directoryPath = fs::current_path();
 
 LoginWindow::LoginWindow(QWidget *parent)
         : QMainWindow(parent)
@@ -40,18 +39,18 @@ void LoginWindow::on_btnLogin_clicked()
     }
 
     if (currentUsers.count(username) == 0) {
-        if (!generateFaceset(username, 5, 10)) {
+        if (!generateFaceset(username, 1, 5)) {
             std::cout << "[Error] Could not generate facial data.\n";
             return;
         }
     }
 
-    if (!trainFaceset()) {
+    if (!trainFaceDescriptors()) {
         std::cout << "[Error] Could not train facial data.\n";
         return;
     }
 
-    if (authenticateFace(username, 30)) {
+    if (authenticate(username)) {
         NotepadWindow* notepadwindow = new NotepadWindow(username);
         notepadwindow->show();
         this->close();

@@ -18,8 +18,6 @@ find_package(OpenCV REQUIRED)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
-# Include directories for OpenCV
-
 
 # Set the include and library paths for Crypto++ and dlib
 set(CRYPTO++_INCLUDE_DIR "/opt/homebrew/Cellar/cryptopp/8.9.0/include/cryptopp")
@@ -31,6 +29,11 @@ set(DLIB_LIBRARY "/opt/homebrew/Cellar/dlib/19.24.4/lib/libdlib.dylib")
 include_directories(${OpenCV_INCLUDE_DIRS})
 include_directories(${CRYPTO++_INCLUDE_DIR})
 include_directories(${DLIB_INCLUDE_DIR})
+
+add_executable(Test test.cpp)
+
+target_link_libraries(Test ${OpenCV_LIBS} ${CRYPTO++_LIBRARY} ${DLIB_LIBRARY} "-framework Accelerate")
+
 
 set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_CURRENT_SOURCE_DIR}/ui)
 
@@ -77,7 +80,7 @@ else()
     endif()
 endif()
 
-target_link_libraries(CryptograFace PRIVATE Qt${QT_VERSION_MAJOR}::Widgets ${OpenCV_LIBS} ${CRYPTO++_LIBRARY})
+target_link_libraries(CryptograFace PRIVATE Qt${QT_VERSION_MAJOR}::Widgets ${OpenCV_LIBS} ${CRYPTO++_LIBRARY} ${DLIB_LIBRARY} "-framework Accelerate")
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
