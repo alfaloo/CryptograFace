@@ -74,6 +74,7 @@ using namespace std;
 unsigned long is_face_known(const matrix<float,0,1>& new_face_descriptor, const std::vector<matrix<float,0,1>>& existing_descriptors, const std::vector<unsigned long>& labels, double threshold = 0.6) {
     for (int i = 0; i < existing_descriptors.size(); i++) {
         auto& descriptor = existing_descriptors[i];
+        std::cout << length(new_face_descriptor - descriptor) << "\n";
         if (length(new_face_descriptor - descriptor) < threshold) {
             return labels[i];
         }
@@ -155,7 +156,7 @@ int main() {
     deserialize(directoryPath + "/data/dlib_models/dlib_face_recognition_resnet_model_v1.dat") >> net;
 
     matrix<rgb_pixel> img;
-    load_image(img, "test.jpg");
+    load_image(img, "ethan.jpg");
     // Display the raw image on the screen
     cv::Mat cv_img = dlib::toMat(img);
     cv::imshow("Converted Image", cv_img);
@@ -232,7 +233,7 @@ int main() {
 
 
     matrix<rgb_pixel> new_img;
-    load_image(new_img, "test1.jpg");
+    load_image(new_img, "asian.jpg");
     std::vector<matrix<rgb_pixel>> new_faces;
     for (auto face : detector(new_img)) {
         matrix<rgb_pixel> new_face_chip;

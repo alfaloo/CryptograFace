@@ -34,6 +34,8 @@ using anet_type = dlib::loss_metric<dlib::fc_no_bias<128,dlib::avg_pool_everythi
                                                                                      dlib::input_rgb_image_sized<150>
                                                                      >>>>>>>>>>>>;
 
+int faceDescriptorThreshold = 0.315;
+
 bool captureImages(const std::string& userName, const std::string& userDir, int amount, int threadCount) {
     cv::VideoCapture videoCapture(0);
     if (!videoCapture.isOpened()) {
@@ -147,7 +149,7 @@ bool generateFaceset(const std::string& userName, int clicks, int amount) {
 std::pair<std::vector<std::string>, int> loadImages(const std::string& directory, std::vector<dlib::matrix<dlib::rgb_pixel>>& faceChips) {
     dlib::frontal_face_detector detector = dlib::get_frontal_face_detector();
     dlib::shape_predictor sp;
-    dlib::deserialize(directoryPath + "/data/dlib_models/shape_predictor_5_face_landmarks.dat") >> sp;
+    dlib::deserialize(directoryPath + "/data/dlib_models/shape_predictor_68_face_landmarks.dat") >> sp;
 
     std::vector<std::string> names;
     int uniqueNames = 0;
@@ -164,7 +166,8 @@ std::pair<std::vector<std::string>, int> loadImages(const std::string& directory
                         std::vector<dlib::rectangle> faces = detector(img);
 
                         if (faces.size() != 1) {
-                            continue; // Either no face present or multiple faces detected.
+                            std::cout << "[Error] Zero or multiple faces detected\n";
+                            continue;
                         }
 
                         dlib::rectangle face = faces[0];
@@ -177,7 +180,8 @@ std::pair<std::vector<std::string>, int> loadImages(const std::string& directory
                         names.push_back(entry.path().filename().string());  // Store the directory name as the label
                     }
                 } catch (const dlib::image_load_error& e) {
-                    std::cerr << "Failed to load image: " << file.path() << " with error: " << e.what() << std::endl;
+                    std::cout << "[Error] Failed to load image: " << file.path() << " with error: " << e.what() << "\n";
+                    continue;
                 }
             }
             uniqueNames++;
@@ -204,8 +208,9 @@ bool trainFaceDescriptors() {
 
     std::vector<dlib::sample_pair> edges;
     for (size_t i = 0; i < faceDescriptors.size(); i++) {
-        for (size_t j = i; j < faceDescriptors.size(); j++) {
-            if (length(faceDescriptors[i] - faceDescriptors[j]) < 0.6)
+        for (size_t j = i + 1; j < faceDescriptors.size(); j++) {
+            std::cout << length(faceDescriptors[i] - faceDescriptors[j]) << "\n";
+            if (length(faceDescriptors[i] - faceDescriptors[j]) < faceDescriptorThreshold)
                 edges.push_back(dlib::sample_pair(i,j));
         }
     }
@@ -230,7 +235,7 @@ bool trainFaceDescriptors() {
 std::string findFace(const dlib::matrix<float,0,1>& nfd,
                      const std::vector<dlib::matrix<float,0,1>>& faceDescriptors,
                      const std::vector<unsigned long>& labels,
-                     double threshold = 0.6) {
+                     double threshold = faceDescriptorThreshold) {
     for (int i = 0; i < faceDescriptors.size(); i++) {
         const dlib::matrix<float,0,1>& descriptor = faceDescriptors[i];
         std::cout<< length(nfd - descriptor) <<"\n";
@@ -248,7 +253,7 @@ bool authenticate(std::string username) {
 
     dlib::frontal_face_detector detector = dlib::get_frontal_face_detector();
     dlib::shape_predictor sp;
-    dlib::deserialize(directoryPath + "/data/dlib_models/shape_predictor_5_face_landmarks.dat") >> sp;
+    dlib::deserialize(directoryPath + "/data/dlib_models/shape_predictor_68_face_landmarks.dat") >> sp;
     anet_type net;
     dlib::deserialize(directoryPath + "/data/dlib_models/dlib_face_recognition_resnet_model_v1.dat") >> net;
 
