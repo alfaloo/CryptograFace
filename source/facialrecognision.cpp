@@ -34,7 +34,7 @@ using anet_type = dlib::loss_metric<dlib::fc_no_bias<128,dlib::avg_pool_everythi
                                                                                      dlib::input_rgb_image_sized<150>
                                                                      >>>>>>>>>>>>;
 
-int faceDescriptorThreshold = 0.315;
+double faceDescriptorThreshold = 0.315;
 
 bool captureImages(const std::string& userName, const std::string& userDir, int amount, int threadCount) {
     cv::VideoCapture videoCapture(0);
@@ -209,7 +209,6 @@ bool trainFaceDescriptors() {
     std::vector<dlib::sample_pair> edges;
     for (size_t i = 0; i < faceDescriptors.size(); i++) {
         for (size_t j = i + 1; j < faceDescriptors.size(); j++) {
-            std::cout << length(faceDescriptors[i] - faceDescriptors[j]) << "\n";
             if (length(faceDescriptors[i] - faceDescriptors[j]) < faceDescriptorThreshold)
                 edges.push_back(dlib::sample_pair(i,j));
         }
@@ -234,12 +233,10 @@ bool trainFaceDescriptors() {
 
 std::string findFace(const dlib::matrix<float,0,1>& nfd,
                      const std::vector<dlib::matrix<float,0,1>>& faceDescriptors,
-                     const std::vector<unsigned long>& labels,
-                     double threshold = faceDescriptorThreshold) {
+                     const std::vector<unsigned long>& labels) {
     for (int i = 0; i < faceDescriptors.size(); i++) {
         const dlib::matrix<float,0,1>& descriptor = faceDescriptors[i];
-        std::cout<< length(nfd - descriptor) <<"\n";
-        if (length(nfd - descriptor) < threshold) {
+        if (length(nfd - descriptor) < faceDescriptorThreshold) {
             return nameMappings[labels[i]];
         }
     }
@@ -279,7 +276,7 @@ bool authenticate(std::string username) {
         std::vector<dlib::matrix<dlib::rgb_pixel>> dlibFaces;
         for (dlib::rectangle face : detector(img)) {
             dlib::matrix<dlib::rgb_pixel> faceChip;
-            auto shape = sp(img, face);
+            dlib::full_object_detection shape = sp(img, face);
             extract_image_chip(img, get_face_chip_details(shape,150,0.25), faceChip);
             dlibFaces.push_back(std::move(faceChip));
         }
