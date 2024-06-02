@@ -66,16 +66,11 @@ bool captureImages(const std::string& userName, const std::string& userDir, int 
             std::cout << "[Note] Multiple faces detected, please try again.\n";
             continue;
         } else {
-//            cv::Mat roi = gray(faces[0]);
-//            if (roi.empty()) {
-//                std::cout << "[Error]: ROI is empty, try again." << std::endl;
-//                continue;
-//            }
             std::string imgPath = userDir + "/" + userName + "_" + std::to_string(threadCount) + "." + std::to_string(imageCount) + ".png";
             cv::imwrite(imgPath, frame);
             std::cout << "[INFO] Image " << std::to_string(threadCount) + "." + std::to_string(imageCount) << " has been saved in folder: " << userName << "\n";
 
-            std::this_thread::sleep_for(std::chrono::milliseconds (200));
+            std::this_thread::sleep_for(std::chrono::milliseconds (500));
             imageCount++;
         }
     }
@@ -100,9 +95,40 @@ bool generateFaceset(const std::string& userName, int clicks, int amount) {
     cv::Mat frame, gray;
     std::vector<cv::Rect> faces;
 
-    std::vector<std::thread> imageCaptureThreads;
+    std::queue<std::future<bool>> imageCaptureThreads;
+    bool allCompleted = false;
 
-    while (threadCount < clicks) {
+    while (!allCompleted) {
+        if (threadCount >= clicks) {
+            while (imageCaptureThreads.size() > 0) {
+                if (imageCaptureThreads.front().wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+                    std::future<bool> fut = std::move(imageCaptureThreads.front());
+                    imageCaptureThreads.pop();
+                    try {
+                        if (fut.get()) {
+                            allCompleted = true;
+                        } else {
+                            std::cout << "[Error] Image capture future failed to complete.\n";
+                            allCompleted = false;
+                            threadCount--;
+                            break;
+                        }
+                    } catch (const std::exception& e) {
+                        std::cout << "[Error] Exception from image capture future: " << e.what() << "\n";
+                        allCompleted = false;
+                        threadCount--;
+                        break;
+                    }
+                } else {
+                    allCompleted = false;
+                    break;
+                }
+            }
+            if (allCompleted) {
+                break;
+            }
+        }
+
         videoCapture >> frame;
         if (frame.empty()) {
             std::cout << "[Error] No captured frame." << std::endl;
@@ -121,8 +147,9 @@ bool generateFaceset(const std::string& userName, int clicks, int amount) {
         cv::imshow("Identified Face", frame);
         char key = (char) cv::waitKey(1);
 
-        if (key == 's') {
-            imageCaptureThreads.push_back(std::thread(captureImages, userName, userDir, amount, threadCount));
+        if (threadCount < clicks && key == 's') {
+            std::future<bool> future = std::async(std::launch::async, captureImages, userName, userDir, amount, threadCount);
+            imageCaptureThreads.push(std::move(future));
             threadCount++;
         } else if (key == 'q') {
             fs::remove_all(userDir);
@@ -134,12 +161,6 @@ bool generateFaceset(const std::string& userName, int clicks, int amount) {
 
     videoCapture.release();
     cv::destroyAllWindows();
-
-    for (std::thread& thread : imageCaptureThreads) {
-        if (thread.joinable()) {
-            thread.join();
-        }
-    }
 
     std::cout << "[INFO] Dataset has been created for " << userName << std::endl;
 

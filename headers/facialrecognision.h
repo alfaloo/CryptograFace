@@ -19,7 +19,9 @@
 #include <string>
 #include <unordered_set>
 #include <unordered_map>
+#include <queue>
 #include <thread>
+#include <future>
 
 bool generateFaceset(const std::string& userName, int clicks, int amount);
 bool trainFaceDescriptors();

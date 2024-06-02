@@ -1,9 +1,4 @@
-#include <QDebug>
 #include "../headers/loginwindow.h"
-#include "../headers/notepadwindow.h"
-#include "./ui_loginwindow.h"
-
-#include "../headers/facialrecognision.h"
 
 namespace fs = std::__fs::filesystem;
 
@@ -21,7 +16,7 @@ LoginWindow::~LoginWindow()
 
 void LoginWindow::on_btnLogin_clicked()
 {
-    std::string username = ui->txtUsername->toPlainText().toStdString();
+    std::string username = ui->txtUsername->text().toStdString();
 
     ui->txtUsername->setText("");
 
@@ -33,13 +28,16 @@ void LoginWindow::on_btnLogin_clicked()
     }
 
     for (const fs::directory_entry& entry : fs::directory_iterator(directoryPath + "/data/facesets")) {
-        if (fs::is_directory(entry)) {
+        if (fs::is_directory(entry) && fs::is_empty(entry)) {
+            fs::remove(entry.path());  // Deletes the directory
+            std::cout << "[Info] Deleted empty directory: " << entry.path() << "\n";
+        } else if (fs::is_directory(entry)) {
             currentUsers.insert(entry.path().filename().string());
         }
     }
 
     if (currentUsers.count(username) == 0) {
-        if (!generateFaceset(username, 1, 5)) {
+        if (!generateFaceset(username, 1, 6)) {
             std::cout << "[Error] Could not generate facial data.\n";
             return;
         }
@@ -57,3 +55,10 @@ void LoginWindow::on_btnLogin_clicked()
     }
 }
 
+void LoginWindow::keyPressEvent(QKeyEvent *event) {
+    if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) {
+        on_btnLogin_clicked();  // Call the login button click handler directly
+    } else {
+        QMainWindow::keyPressEvent(event);  // Call the base class implementation for other key presses
+    }
+}
