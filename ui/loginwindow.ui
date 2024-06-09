@@ -6,31 +6,21 @@
             <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>200</width>
-                <height>198</height>
+                <width>350</width>
+                <height>197</height>
             </rect>
         </property>
         <property name="windowTitle">
-            <string>Login</string>
+            <string>LoginWindow</string>
         </property>
         <widget class="QWidget" name="centralwidget">
-            <widget class="QLineEdit" name="txtUsername">
-                <property name="geometry">
-                    <rect>
-                        <x>50</x>
-                        <y>70</y>
-                        <width>101</width>
-                        <height>21</height>
-                    </rect>
-                </property>
-            </widget>
             <widget class="QLabel" name="label">
                 <property name="geometry">
                     <rect>
-                        <x>60</x>
-                        <y>30</y>
-                        <width>71</width>
-                        <height>16</height>
+                        <x>30</x>
+                        <y>20</y>
+                        <width>81</width>
+                        <height>21</height>
                     </rect>
                 </property>
                 <property name="text">
@@ -40,14 +30,63 @@
             <widget class="QPushButton" name="btnLogin">
                 <property name="geometry">
                     <rect>
-                        <x>50</x>
-                        <y>110</y>
-                        <width>100</width>
+                        <x>250</x>
+                        <y>15</y>
+                        <width>71</width>
                         <height>32</height>
                     </rect>
                 </property>
                 <property name="text">
                     <string>Login</string>
+                </property>
+            </widget>
+            <widget class="QLineEdit" name="txtUsername">
+                <property name="geometry">
+                    <rect>
+                        <x>110</x>
+                        <y>20</y>
+                        <width>131</width>
+                        <height>21</height>
+                    </rect>
+                </property>
+            </widget>
+            <widget class="QTextEdit" name="txtInfo">
+                <property name="geometry">
+                    <rect>
+                        <x>30</x>
+                        <y>53</y>
+                        <width>291</width>
+                        <height>81</height>
+                    </rect>
+                </property>
+                <property name="readOnly">
+                    <bool>true</bool>
+                </property>
+            </widget>
+            <widget class="QCheckBox" name="chbCamera">
+                <property name="geometry">
+                    <rect>
+                        <x>30</x>
+                        <y>140</y>
+                        <width>121</width>
+                        <height>20</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>Enable Camera</string>
+                </property>
+            </widget>
+            <widget class="QPushButton" name="btnExit">
+                <property name="geometry">
+                    <rect>
+                        <x>250</x>
+                        <y>135</y>
+                        <width>71</width>
+                        <height>32</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>Exit</string>
                 </property>
             </widget>
         </widget>

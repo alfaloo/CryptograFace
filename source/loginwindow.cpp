@@ -5,54 +5,43 @@ namespace fs = std::__fs::filesystem;
 LoginWindow::LoginWindow(QWidget *parent)
         : QMainWindow(parent)
         , ui(new Ui::LoginWindow)
-{
+        , facialAuthenticator() {
     ui->setupUi(this);
+    facialAuthenticator.addLogger(ui->txtInfo);
 }
 
-LoginWindow::~LoginWindow()
-{
+LoginWindow::~LoginWindow() {
     delete ui;
 }
 
-void LoginWindow::on_btnLogin_clicked()
-{
+void LoginWindow::on_btnLogin_clicked() {
     std::string username = ui->txtUsername->text().toStdString();
 
     ui->txtUsername->setText("");
 
     if (username == "") return;
 
-    if (!faceCascade.load(directoryPath + "/data/haarcascades/haarcascade_frontalface_alt.xml")) {
-        std::cout << "[Error] Could not load face cascade.\n";
-        return;
-    }
+    facialAuthenticator.uploadUsers("/data/facesets");
 
-    for (const fs::directory_entry& entry : fs::directory_iterator(directoryPath + "/data/facesets")) {
-        if (fs::is_directory(entry) && fs::is_empty(entry)) {
-            fs::remove(entry.path());  // Deletes the directory
-            std::cout << "[Info] Deleted empty directory: " << entry.path() << "\n";
-        } else if (fs::is_directory(entry)) {
-            currentUsers.insert(entry.path().filename().string());
-        }
-    }
-
-    if (currentUsers.count(username) == 0) {
-        if (!generateFaceset(username, 1, 6)) {
-            std::cout << "[Error] Could not generate facial data.\n";
+    if (!facialAuthenticator.userExists(username)) {
+        if (!facialAuthenticator.generateFaceset(username, 1, 6)) {
             return;
         }
     }
 
-    if (!trainFaceDescriptors()) {
-        std::cout << "[Error] Could not train facial data.\n";
+    if (!facialAuthenticator.trainFaceDescriptors()) {
         return;
     }
 
-    if (authenticate(username)) {
+    if (facialAuthenticator.authenticate(username)) {
         NotepadWindow* notepadwindow = new NotepadWindow(username);
         notepadwindow->show();
         this->close();
     }
+}
+
+void LoginWindow::on_btnExit_clicked() {
+    this->close();
 }
 
 void LoginWindow::keyPressEvent(QKeyEvent *event) {

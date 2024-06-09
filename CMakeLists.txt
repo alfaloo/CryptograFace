@@ -53,8 +53,6 @@ set(PROJECT_SOURCES
 
         source/cryptography.cpp
         headers/cryptography.h
-
-        source/globals.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

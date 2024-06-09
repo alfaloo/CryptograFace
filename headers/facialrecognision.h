@@ -22,14 +22,44 @@
 #include <queue>
 #include <thread>
 #include <future>
+#include <QTextEdit>
 
-bool generateFaceset(const std::string& userName, int clicks, int amount);
-bool trainFaceDescriptors();
-bool authenticate(std::string username);
+namespace fs = std::__fs::filesystem;
 
-extern std::string directoryPath;
-extern cv::CascadeClassifier faceCascade;
-extern std::unordered_set<std::string> currentUsers;
-extern std::unordered_map<unsigned long, std::string> nameMappings;
-extern std::vector<dlib::matrix<float,0,1>> faceDescriptors;
-extern std::vector<unsigned long> labels;
+class FacialAuthenticator {
+public:
+    FacialAuthenticator();
+    ~FacialAuthenticator() = default;
+
+    bool generateFaceset(const std::string& userName, int clicks, int amount);
+
+    bool trainFaceDescriptors();
+
+    bool authenticate(std::string username);
+
+    void addLogger(QTextEdit *qTextEdit);
+
+    void uploadUsers(std::string path);
+
+    bool userExists(std::string username);
+
+private:
+    QTextEdit *logger;
+    std::string directoryPath;
+    cv::CascadeClassifier faceCascade;
+    std::unordered_set<std::string> currentUsers;
+    std::unordered_map<unsigned long, std::string> nameMappings;
+    std::vector<dlib::matrix<float,0,1>> faceDescriptors;
+    std::vector<unsigned long> labels;
+
+    void logInfo(std::string info);
+
+    bool captureImages(const std::string& userName, const std::string& userDir, int amount, int threadCount);
+
+    std::pair<std::vector<std::string>, int> loadImages(const std::string& directory,
+                                                        std::vector<dlib::matrix<dlib::rgb_pixel>>& faceChips);
+
+    std::string findFace(const dlib::matrix<float,0,1>& nfd,
+                         const std::vector<dlib::matrix<float,0,1>>& faceDescriptors,
+                         const std::vector<unsigned long>& labels);
+};

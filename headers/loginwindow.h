@@ -7,6 +7,8 @@
 #include <QKeyEvent>
 #include <QDebug>
 
+#include <string>
+
 #include "./ui_loginwindow.h"
 #include "../headers/loginwindow.h"
 #include "../headers/notepadwindow.h"
@@ -18,16 +20,18 @@ namespace Ui {
 }
 QT_END_NAMESPACE
 
-class LoginWindow : public QMainWindow
-{
+class LoginWindow : public QMainWindow {
 Q_OBJECT
 
 public:
     LoginWindow(QWidget *parent = nullptr);
     ~LoginWindow();
+private:
     Ui::LoginWindow *ui;
+    FacialAuthenticator facialAuthenticator;
 private slots:
     void on_btnLogin_clicked();
+    void on_btnExit_clicked();
     void keyPressEvent(QKeyEvent *event) override;
 };
 #endif // LOGINWINDOW_H
