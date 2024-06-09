@@ -83,7 +83,6 @@ bool FacialAuthenticator::userExists(std::string username) {
 }
 
 bool FacialAuthenticator::captureImages(const std::string& userName, const std::string& userDir, int amount, int threadCount) {
-//    return false;
     cv::VideoCapture videoCapture(0);
     if (!videoCapture.isOpened()) {
         logInfo("[ERROR] Could not open video capture.");
@@ -199,6 +198,7 @@ bool FacialAuthenticator::generateFaceset(const std::string& userName, int click
         }
 
         if (threadCount < clicks && keyPressed == "s") {
+            keyPressed = "";
             std::future<bool> future = std::async(
                 std::launch::async,
                 [this, &userName, &userDir, &amount, &threadCount]() { return this->captureImages(userName, userDir, amount, threadCount); }

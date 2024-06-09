@@ -68,12 +68,12 @@
                     <rect>
                         <x>30</x>
                         <y>140</y>
-                        <width>121</width>
+                        <width>151</width>
                         <height>20</height>
                     </rect>
                 </property>
                 <property name="text">
-                    <string>Enable Camera</string>
+                    <string>Enable Camera Feed</string>
                 </property>
             </widget>
             <widget class="QPushButton" name="btnExit">

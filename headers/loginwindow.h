@@ -40,6 +40,6 @@ private slots:
     void on_btnLogin_clicked();
     void openNotepadWindow(const QString& username);
     void on_btnExit_clicked();
-    virtual void keyPressEvent(QKeyEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
 };
 #endif // LOGINWINDOW_H

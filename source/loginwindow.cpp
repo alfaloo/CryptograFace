@@ -16,6 +16,9 @@ LoginWindow::~LoginWindow() {
 }
 
 void LoginWindow::on_btnLogin_clicked() {
+    ui->txtUsername->clearFocus();
+    this->setFocus();
+
     if (ui->chbCamera->isChecked()) {
         btnLogin_logic(true);
         return;
@@ -25,6 +28,7 @@ void LoginWindow::on_btnLogin_clicked() {
         if (loginAttempts.front().wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
             loginAttempts.pop();
         } else {
+            ui->txtUsername->setText("");
             std::string info = "[INFO] Login already in progress.";
             std::cout << info << "\n";
 
@@ -72,11 +76,13 @@ void LoginWindow::btnLogin_logic(bool showCamera) {
 
 void LoginWindow::openNotepadWindow(const QString& username) {
     NotepadWindow* notepadwindow = new NotepadWindow(username.toStdString());
-    notepadwindow->show();
     this->close();
+    facialAuthenticator.keyPressed = "q";
+    notepadwindow->show();
 }
 
 void LoginWindow::on_btnExit_clicked() {
+    facialAuthenticator.keyPressed = "q";
     this->close();
 }
 
@@ -86,7 +92,6 @@ void LoginWindow::keyPressEvent(QKeyEvent *event) {
     } else {
         std::string key = event->text().toStdString();
         facialAuthenticator.keyPressed = key;
-        std::cout << key << "\n";
         QMainWindow::keyPressEvent(event);  // Call the base class implementation for other key presses
     }
 }
