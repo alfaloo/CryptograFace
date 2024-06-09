@@ -31,17 +31,19 @@ public:
     FacialAuthenticator();
     ~FacialAuthenticator() = default;
 
-    bool generateFaceset(const std::string& userName, int clicks, int amount);
+    bool generateFaceset(const std::string& userName, int clicks, int amount, bool showCamera);
 
     bool trainFaceDescriptors();
 
-    bool authenticate(std::string username);
+    bool authenticate(std::string username, bool showCamera);
 
     void addLogger(QTextEdit *qTextEdit);
 
     void uploadUsers(std::string path);
 
     bool userExists(std::string username);
+
+    std::string keyPressed;
 
 private:
     QTextEdit *logger;

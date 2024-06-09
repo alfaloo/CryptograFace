@@ -37,7 +37,8 @@ using anet_type = dlib::loss_metric<dlib::fc_no_bias<128,dlib::avg_pool_everythi
 double faceDescriptorThreshold = 0.315;
 
 FacialAuthenticator::FacialAuthenticator()
-        : logger(nullptr)
+        : keyPressed("")
+        , logger(nullptr)
         , directoryPath(fs::current_path())
         , faceCascade()
         , currentUsers()
@@ -82,6 +83,7 @@ bool FacialAuthenticator::userExists(std::string username) {
 }
 
 bool FacialAuthenticator::captureImages(const std::string& userName, const std::string& userDir, int amount, int threadCount) {
+//    return false;
     cv::VideoCapture videoCapture(0);
     if (!videoCapture.isOpened()) {
         logInfo("[ERROR] Could not open video capture.");
@@ -123,7 +125,7 @@ bool FacialAuthenticator::captureImages(const std::string& userName, const std::
     return true;
 }
 
-bool FacialAuthenticator::generateFaceset(const std::string& userName, int clicks, int amount) {
+bool FacialAuthenticator::generateFaceset(const std::string& userName, int clicks, int amount, bool showCamera) {
     std::string userDir = "data/facesets/" + userName;
     fs::create_directories(userDir);
 
@@ -142,6 +144,8 @@ bool FacialAuthenticator::generateFaceset(const std::string& userName, int click
 
     std::queue<std::future<bool>> imageCaptureThreads;
     bool allCompleted = false;
+
+    keyPressed = "";
 
     while (!allCompleted) {
         if (threadCount >= clicks) {
@@ -182,24 +186,26 @@ bool FacialAuthenticator::generateFaceset(const std::string& userName, int click
             return false;
         }
 
-        cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
-        faceCascade.detectMultiScale(gray, faces, 1.1, 5, 0, cv::Size(200, 200));
+        if (showCamera) {
+            cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+            faceCascade.detectMultiScale(gray, faces, 1.1, 5, 0, cv::Size(200, 200));
 
-        for (const cv::Rect_<int>& face : faces) {
-            cv::rectangle(frame, face, cv::Scalar(0, 255, 0), 2);
+            for (const cv::Rect_<int>& face : faces) {
+                cv::rectangle(frame, face, cv::Scalar(0, 255, 0), 2);
+            }
+
+            cv::imshow("Identified Face", frame);
+            keyPressed = (char) cv::waitKey(1);
         }
 
-        cv::imshow("Identified Face", frame);
-        char key = (char) cv::waitKey(1);
-
-        if (threadCount < clicks && key == 's') {
+        if (threadCount < clicks && keyPressed == "s") {
             std::future<bool> future = std::async(
-                    std::launch::async,
-                    [this, &userName, &userDir, &amount, &threadCount]() { return this->captureImages(userName, userDir, amount, threadCount); }
+                std::launch::async,
+                [this, &userName, &userDir, &amount, &threadCount]() { return this->captureImages(userName, userDir, amount, threadCount); }
             );
             imageCaptureThreads.push(std::move(future));
             threadCount++;
-        } else if (key == 'q') {
+        } else if (keyPressed == "q") {
             fs::remove_all(userDir);
             videoCapture.release();
             cv::destroyAllWindows();
@@ -314,7 +320,7 @@ std::string FacialAuthenticator::findFace(const dlib::matrix<float,0,1>& nfd,
     return "";
 }
 
-bool FacialAuthenticator::authenticate(std::string username) {
+bool FacialAuthenticator::authenticate(std::string username, bool showCamera) {
     cv::Ptr<cv::face::LBPHFaceRecognizer> recognizer = cv::face::LBPHFaceRecognizer::create();
     recognizer->read("data/trained_models/face_classifier.yml");
 
@@ -332,6 +338,7 @@ bool FacialAuthenticator::authenticate(std::string username) {
 
     cv::Mat frame;
     logInfo("[INSTRUCTION] Starting facial recognition, press 'q' to quit.");
+    keyPressed = "";
 
     while (videoCapture.read(frame)) {
         if (frame.empty()) {
@@ -364,17 +371,21 @@ bool FacialAuthenticator::authenticate(std::string username) {
             }
         }
 
-        cv::Mat gray;
-        cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
-        std::vector<cv::Rect> faces;
-        faceCascade.detectMultiScale(gray, faces, 1.1, 5, 0, cv::Size(200, 200));
+        if (showCamera) {
+            cv::Mat gray;
+            cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+            std::vector<cv::Rect> faces;
+            faceCascade.detectMultiScale(gray, faces, 1.1, 5, 0, cv::Size(200, 200));
 
-        for (const cv::Rect_<int>& face : faces) {
-            cv::rectangle(frame, face, cv::Scalar(0, 255, 0), 2);
+            for (const cv::Rect_<int>& face : faces) {
+                cv::rectangle(frame, face, cv::Scalar(0, 255, 0), 2);
+            }
+
+            cv::imshow("Recognise", frame);
+            keyPressed = (char) cv::waitKey(1);
         }
 
-        cv::imshow("Recognise", frame);
-        if (cv::waitKey(10) == 'q') {
+        if (keyPressed == "q") {
             break;
         }
     }

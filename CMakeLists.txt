@@ -15,8 +15,8 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
 # Find OpenCV
 find_package(OpenCV REQUIRED)
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Concurrent)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Concurrent)
 
 
 # Set the include and library paths for Crypto++ and dlib
@@ -78,7 +78,7 @@ else()
     endif()
 endif()
 
-target_link_libraries(CryptograFace PRIVATE Qt${QT_VERSION_MAJOR}::Widgets ${OpenCV_LIBS} ${CRYPTO++_LIBRARY} ${DLIB_LIBRARY} "-framework Accelerate")
+target_link_libraries(CryptograFace PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Concurrent ${OpenCV_LIBS} ${CRYPTO++_LIBRARY} ${DLIB_LIBRARY} "-framework Accelerate")
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
