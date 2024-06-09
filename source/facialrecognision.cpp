@@ -56,9 +56,14 @@ void FacialAuthenticator::addLogger(QTextEdit *qTextEdit) {
 
 void FacialAuthenticator::logInfo(std::string info) {
     std::cout << info << "\n";
+
     if (!logger) return;
+
     QString qString = QString::fromStdString(info);
     logger->append(qString);
+
+    logger->moveCursor(QTextCursor::End);
+    logger->ensureCursorVisible();
 }
 
 void FacialAuthenticator::uploadUsers(std::string path) {
@@ -198,6 +203,7 @@ bool FacialAuthenticator::generateFaceset(const std::string& userName, int click
             fs::remove_all(userDir);
             videoCapture.release();
             cv::destroyAllWindows();
+            logInfo("[ERROR] Could not generate facial data.");
             return false;
         }
     }
@@ -375,5 +381,7 @@ bool FacialAuthenticator::authenticate(std::string username) {
 
     videoCapture.release();
     cv::destroyAllWindows();
+    logInfo("[ERROR] Could not identify user.");
+
     return false;
 }
