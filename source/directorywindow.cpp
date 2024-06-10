@@ -8,32 +8,48 @@ DirectoryWindow::DirectoryWindow(std::string username)
         : username(username) {
     centralWidget = new QWidget(this);
     setCentralWidget(centralWidget);
-    layout = new QVBoxLayout();
+    layout = new QGridLayout;
     centralWidget->setLayout(layout);
+
+    QLabel *label = new QLabel("New Entry:");
+    QLineEdit *txtName = new QLineEdit();
+    QPushButton *btnNewFile = new QPushButton("Text");
+    QPushButton *btnNewImage = new QPushButton("Image");
+
+    layout->addWidget(label, 0, 0);
+    layout->addWidget(txtName, 0, 1);
+    layout->addWidget(btnNewFile, 0, 2);
+    layout->addWidget(btnNewImage, 0, 3);
+
+//    connect(btnOpen, &QPushButton::clicked, [this, filename = filename]() {
+//        openFile(filename);
+//    });
+//    connect(btnDelete, &QPushButton::clicked, [this, filename = filename]() {
+//        deleteFile(filename);
+//    });
 
     std::string userDir = "/Users/alfaloo/github/CryptograFace/data/ciphers/" + username;
 
     QDir directory(QString::fromStdString(userDir));
     QStringList textFiles = directory.entryList(QStringList() << "*.txt", QDir::Files);
-        foreach (QString file, textFiles) {
-        QWidget *fileWidget = new QWidget();
-        QHBoxLayout *fileLayout = new QHBoxLayout(fileWidget);
 
+    int counter = 0;
+    foreach (QString file, textFiles) {
+        counter++;
         QFileInfo fileInfo(file);
         QString filename = fileInfo.baseName();
         QLabel *label = new QLabel(filename);
-        QPushButton *openButton = new QPushButton("Open");
-        QPushButton *deleteButton = new QPushButton("Delete");
+        QPushButton *btnOpen = new QPushButton("Open");
+        QPushButton *btnDelete = new QPushButton("Delete");
 
-        fileLayout->addWidget(label);
-        fileLayout->addWidget(openButton);
-        fileLayout->addWidget(deleteButton);
-        layout->addWidget(fileWidget);
+        layout->addWidget(label, counter, 0);
+        layout->addWidget(btnOpen, counter, 2);
+        layout->addWidget(btnDelete, counter, 3);
 
-        connect(openButton, &QPushButton::clicked, [this, filename = filename]() {
+        connect(btnOpen, &QPushButton::clicked, [this, filename = filename]() {
             openFile(filename);
         });
-        connect(deleteButton, &QPushButton::clicked, [this, filename = filename]() {
+        connect(btnDelete, &QPushButton::clicked, [this, filename = filename]() {
             deleteFile(filename);
         });
     }

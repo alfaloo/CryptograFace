@@ -34,7 +34,7 @@ private slots:
 
 private:
     QWidget *centralWidget;
-    QVBoxLayout *layout;
+    QGridLayout *layout;
 };
 
 
