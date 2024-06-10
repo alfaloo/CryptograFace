@@ -31,11 +31,11 @@ public:
     FacialAuthenticator();
     ~FacialAuthenticator() = default;
 
-    bool generateFaceset(const std::string& userName, int clicks, int amount, bool showCamera);
+    bool generateFaceset(const std::string& username, int clicks, int amount, bool showCamera);
 
     bool trainFaceDescriptors();
 
-    bool authenticate(std::string username, bool showCamera);
+    bool authenticate(std::string username, bool showCamera, bool updateFaceset);
 
     void addLogger(QTextEdit *qTextEdit);
 
@@ -56,7 +56,7 @@ private:
 
     void logInfo(std::string info);
 
-    bool captureImages(const std::string& userName, const std::string& userDir, int amount, int threadCount);
+    bool captureImages(const std::string& username, const std::string& userDir, int amount, int threadCount);
 
     std::pair<std::vector<std::string>, int> loadImages(const std::string& directory,
                                                         std::vector<dlib::matrix<dlib::rgb_pixel>>& faceChips);

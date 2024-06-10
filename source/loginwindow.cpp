@@ -69,7 +69,7 @@ void LoginWindow::btnLogin_logic(bool showCamera) {
         return;
     }
 
-    if (facialAuthenticator.authenticate(username, showCamera)) {
+    if (facialAuthenticator.authenticate(username, showCamera, true)) {
         emit loginSuccess(QString::fromStdString(username));
     }
 }

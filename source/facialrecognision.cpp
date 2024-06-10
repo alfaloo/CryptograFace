@@ -82,7 +82,7 @@ bool FacialAuthenticator::userExists(std::string username) {
     return currentUsers.count(username) != 0;
 }
 
-bool FacialAuthenticator::captureImages(const std::string& userName, const std::string& userDir, int amount, int threadCount) {
+bool FacialAuthenticator::captureImages(const std::string& username, const std::string& userDir, int amount, int threadCount) {
     cv::VideoCapture videoCapture(0);
     if (!videoCapture.isOpened()) {
         logInfo("[ERROR] Could not open video capture.");
@@ -102,7 +102,6 @@ bool FacialAuthenticator::captureImages(const std::string& userName, const std::
         }
 
         cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
-        cv::equalizeHist(gray, gray);
         faceCascade.detectMultiScale(gray, faces, 1.1, 5, 0, cv::Size(200, 200));
 
         if (faces.empty()) {
@@ -112,9 +111,9 @@ bool FacialAuthenticator::captureImages(const std::string& userName, const std::
             logInfo("[Warning] Multiple faces detected, please try again.");
             continue;
         } else {
-            std::string imgPath = userDir + "/" + userName + "_" + std::to_string(threadCount) + "." + std::to_string(imageCount) + ".png";
+            std::string imgPath = userDir + "/" + username + "_" + std::to_string(threadCount) + "." + std::to_string(imageCount) + ".png";
             cv::imwrite(imgPath, frame);
-            logInfo("[INFO] Image " + std::to_string(threadCount) + "." + std::to_string(imageCount) + " has been saved in folder: " + userName);
+            logInfo("[INFO] Image " + std::to_string(threadCount) + "." + std::to_string(imageCount) + " has been saved in folder: " + username);
 
             std::this_thread::sleep_for(std::chrono::milliseconds (500));
             imageCount++;
@@ -124,8 +123,10 @@ bool FacialAuthenticator::captureImages(const std::string& userName, const std::
     return true;
 }
 
-bool FacialAuthenticator::generateFaceset(const std::string& userName, int clicks, int amount, bool showCamera) {
-    std::string userDir = "data/facesets/" + userName;
+bool FacialAuthenticator::generateFaceset(const std::string& username, int clicks, int amount, bool showCamera) {
+    logInfo("[INFO] New user detected, facial registration initiating.");
+
+    std::string userDir = "data/facesets/" + username;
     fs::create_directories(userDir);
 
     cv::VideoCapture videoCapture(0);
@@ -134,8 +135,7 @@ bool FacialAuthenticator::generateFaceset(const std::string& userName, int click
         return false;
     }
 
-    logInfo("[INFO] Facial registration initiating, please stay still.");
-    logInfo("[INSTRUCTION] Press 's' to take facial capture 5 times.");
+    logInfo("[INSTRUCTION] Press 's' to take facial capture.");
 
     int threadCount = 0;
     cv::Mat frame, gray;
@@ -201,7 +201,7 @@ bool FacialAuthenticator::generateFaceset(const std::string& userName, int click
             keyPressed = "";
             std::future<bool> future = std::async(
                 std::launch::async,
-                [this, &userName, &userDir, &amount, &threadCount]() { return this->captureImages(userName, userDir, amount, threadCount); }
+                [this, &username, &userDir, &amount, &threadCount]() { return this->captureImages(username, userDir, amount, threadCount); }
             );
             imageCaptureThreads.push(std::move(future));
             threadCount++;
@@ -217,7 +217,7 @@ bool FacialAuthenticator::generateFaceset(const std::string& userName, int click
     videoCapture.release();
     cv::destroyAllWindows();
 
-    logInfo("[INFO] Dataset has been created for " + userName);
+    logInfo("[INFO] Dataset has been created for " + username);
 
     return true;
 }
@@ -229,12 +229,12 @@ std::pair<std::vector<std::string>, int> FacialAuthenticator::loadImages(const s
 
     std::vector<std::string> names;
     int uniqueNames = 0;
-    for (const auto& entry : fs::directory_iterator(directory)) {
+    for (const fs::directory_entry& entry : fs::directory_iterator(directory)) {
         if (fs::is_directory(entry) && fs::is_empty(entry)) {
             fs::remove(entry.path());  // Deletes the directory
             logInfo("[INFO] Deleted empty directory: " + entry.path().string());
         } else if (fs::is_directory(entry)) {  // Check if the entry is a directory
-            for (const auto& file : fs::directory_iterator(entry.path())) {
+            for (const fs::directory_entry& file : fs::directory_iterator(entry.path())) {
                 dlib::matrix<dlib::rgb_pixel> img;
                 try {
                     load_image(img, file.path().string());  // Attempt to load the image
@@ -320,7 +320,7 @@ std::string FacialAuthenticator::findFace(const dlib::matrix<float,0,1>& nfd,
     return "";
 }
 
-bool FacialAuthenticator::authenticate(std::string username, bool showCamera) {
+bool FacialAuthenticator::authenticate(std::string username, bool showCamera, bool updateFaceset) {
     cv::Ptr<cv::face::LBPHFaceRecognizer> recognizer = cv::face::LBPHFaceRecognizer::create();
     recognizer->read("data/trained_models/face_classifier.yml");
 
@@ -365,6 +365,34 @@ bool FacialAuthenticator::authenticate(std::string username, bool showCamera) {
         for (const dlib::matrix<float,0,1>& nfd : newFaceDescriptors) {
             std::string identity = findFace(nfd, faceDescriptors, labels);
             if (identity == username) {
+                if (updateFaceset) {
+                    cv::Mat gray;
+                    std::vector<cv::Rect> faces;
+
+                    cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+                    faceCascade.detectMultiScale(gray, faces, 1.1, 5, 0, cv::Size(200, 200));
+
+                    if (faces.size() == 1) {
+                        std::string userDir = "data/facesets/" + username;
+
+                        std::vector<fs::path> facesetPaths;
+                        for (const fs::directory_entry& entry : fs::directory_iterator(userDir)) {
+                            if (fs::is_regular_file(entry)) {
+                                facesetPaths.push_back(entry.path());
+                            }
+                        }
+
+                        srand(time(nullptr));
+                        int index = rand() % facesetPaths.size();
+                        fs::path path = facesetPaths[index];
+                        fs::remove(path);
+
+                        std::string imgPath = path.string();
+                        cv::imwrite(imgPath, frame);
+                        logInfo("[INFO] Image " + path.filename().string() + " has been updated.");
+                    }
+                }
+
                 videoCapture.release();
                 cv::destroyAllWindows();
                 return true;
