@@ -13,9 +13,9 @@
 #include <future>
 
 #include "./ui_loginwindow.h"
-#include "../headers/loginwindow.h"
-#include "../headers/notepadwindow.h"
-#include "../headers/facialrecognision.h"
+#include "./loginwindow.h"
+#include "./directorywindow.h"
+#include "./facialrecognision.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {

@@ -75,10 +75,10 @@ void LoginWindow::btnLogin_logic(bool showCamera) {
 }
 
 void LoginWindow::openNotepadWindow(const QString& username) {
-    NotepadWindow* notepadwindow = new NotepadWindow(username.toStdString());
-    this->close();
+    DirectoryWindow* directorywindow = new DirectoryWindow(username.toStdString());
     facialAuthenticator.keyPressed = "q";
-    notepadwindow->show();
+    directorywindow->show();
+    this->close();
 }
 
 void LoginWindow::on_btnExit_clicked() {

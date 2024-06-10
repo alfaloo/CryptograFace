@@ -4,7 +4,7 @@
 
 #include "../headers/cryptography.h"
 
-bool encrypt(std::string username, std::string plain) {
+bool encrypt(std::string username, std::string filename, std::string plain) {
     // Create key and initialisation vector
     CryptoPP::AutoSeededRandomPool prng;
     CryptoPP::SecByteBlock key(CryptoPP::AES::DEFAULT_KEYLENGTH);
@@ -13,7 +13,7 @@ bool encrypt(std::string username, std::string plain) {
     prng.GenerateBlock(key, key.size());
     prng.GenerateBlock(iv, iv.size());
 
-    std::ofstream credentialsFile("data/credentials/" + username + "Credentials.txt");
+    std::ofstream credentialsFile("data/credentials/" + username + "/" + filename + ".txt");
     if (!credentialsFile.is_open()) {
         std::cerr << "Failed to open file for credentials." << std::endl;
         return false;
@@ -49,7 +49,7 @@ bool encrypt(std::string username, std::string plain) {
         return false;
     }
 
-    std::ofstream cipherFile("data/ciphers/" + username + "Cipher.txt");
+    std::ofstream cipherFile("data/ciphers/" + username + "/" + filename + ".txt");
     if (!cipherFile.is_open()) {
         std::cerr << "Failed to open file for cipher." << std::endl;
         return false;
@@ -67,8 +67,8 @@ bool encrypt(std::string username, std::string plain) {
     return true;
 }
 
-std::string decrypt(std::string username) {
-    std::ifstream credentialsFile("data/credentials/" + username + "Credentials.txt");
+std::string decrypt(std::string username, std::string filename) {
+    std::ifstream credentialsFile("data/credentials/" + username + "/" + filename + ".txt");
     if (!credentialsFile.is_open()) {
         std::cerr << "Failed to open credentials file." << std::endl;
         return "";
@@ -94,7 +94,7 @@ std::string decrypt(std::string username) {
     ivDecoder.MessageEnd();
     ivDecoder.Get(iv, iv.size());
 
-    std::ifstream cipherFile("data/ciphers/" + username + "Cipher.txt");
+    std::ifstream cipherFile("data/ciphers/" + username + "/" + filename + ".txt");
     if (!cipherFile.is_open()) {
         std::cerr << "Failed to open cipher file." << std::endl;
         return "";

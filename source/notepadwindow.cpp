@@ -3,15 +3,14 @@
 //
 
 #include "../headers/notepadwindow.h"
-#include "../headers/cryptography.h"
-#include "./ui_notepadwindow.h"
 
-NotepadWindow::NotepadWindow(std::string username, QWidget *parent)
+NotepadWindow::NotepadWindow(std::string username, std::string filename, QWidget *parent)
         : username(username)
+        , filename(filename)
         , QMainWindow(parent)
         , ui(new Ui::NotepadWindow) {
     ui->setupUi(this);
-    ui->txtNotepad->setText(QString::fromStdString(decrypt(username)));
+    ui->txtNotepad->setText(QString::fromStdString(decrypt(username, filename)));
 }
 
 NotepadWindow::~NotepadWindow() {
@@ -21,13 +20,21 @@ NotepadWindow::~NotepadWindow() {
 void NotepadWindow::on_btnSave_clicked() {
     std::string plain = ui->txtNotepad->toPlainText().toStdString();
 
-    encrypt(username, plain);
+    encrypt(username, filename, plain);
 
     std::cout << "Notepad Saved\n";
 }
 
+void NotepadWindow::on_btnBack_clicked() {
+    autosave(Leave::back);
+}
+
 void NotepadWindow::on_btnExit_clicked() {
-    if (decrypt(username) != ui->txtNotepad->toPlainText().toStdString()) {
+    autosave(Leave::quit);
+}
+
+void NotepadWindow::autosave(Leave option) {
+    if (decrypt(username, filename) != ui->txtNotepad->toPlainText().toStdString()) {
         QMessageBox::StandardButton reply =
                 QMessageBox::question(this,
                                       "Exit Confirmation",
@@ -36,11 +43,23 @@ void NotepadWindow::on_btnExit_clicked() {
 
         if (reply == QMessageBox::Save) {
             NotepadWindow::on_btnSave_clicked();
+            if (option == Leave::back) {
+                DirectoryWindow* directorywindow = new DirectoryWindow(username);
+                directorywindow->show();
+            }
             this->close();
         } else {
+            if (option == Leave::back) {
+                DirectoryWindow* directorywindow = new DirectoryWindow(username);
+                directorywindow->show();
+            }
             this->close();
         }
     } else {
+        if (option == Leave::back) {
+            DirectoryWindow* directorywindow = new DirectoryWindow(username);
+            directorywindow->show();
+        }
         this->close();
     }
 }

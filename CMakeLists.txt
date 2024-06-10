@@ -48,6 +48,9 @@ set(PROJECT_SOURCES
         headers/notepadwindow.h
         ui/notepadwindow.ui
 
+        source/directorywindow.cpp
+        headers/directorywindow.h
+
         source/facialrecognision.cpp
         headers/facialrecognision.h
 

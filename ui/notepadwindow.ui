@@ -49,6 +49,19 @@
                 <string>Save</string>
             </property>
         </widget>
+        <widget class="QPushButton" name="btnBack">
+            <property name="geometry">
+                <rect>
+                    <x>150</x>
+                    <y>270</y>
+                    <width>100</width>
+                    <height>32</height>
+                </rect>
+            </property>
+            <property name="text">
+                <string>Back</string>
+            </property>
+        </widget>
         <widget class="QPushButton" name="btnExit">
             <property name="geometry">
                 <rect>

@@ -13,6 +13,6 @@
 #include <fstream>
 #include <string>
 
-bool encrypt(std::string username, std::string plain);
+bool encrypt(std::string username, std::string filename, std::string plain);
 
-std::string decrypt(std::string username);
+std::string decrypt(std::string username, std::string filename);
