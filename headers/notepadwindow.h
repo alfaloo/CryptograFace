@@ -8,6 +8,7 @@
 #include <QMainWindow>
 #include <QTextEdit>
 #include <QPushButton>
+#include <QMessageBox>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
