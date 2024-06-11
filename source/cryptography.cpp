@@ -4,6 +4,8 @@
 
 #include "../headers/cryptography.h"
 
+namespace fs = std::__fs::filesystem;
+
 bool encrypt(std::string username, std::string filename, std::string plain) {
     // Create key and initialisation vector
     CryptoPP::AutoSeededRandomPool prng;
@@ -68,6 +70,10 @@ bool encrypt(std::string username, std::string filename, std::string plain) {
 }
 
 std::string decrypt(std::string username, std::string filename) {
+    if (!fs::exists("data/credentials/" + username + "/" + filename + ".txt")) {
+        return "";
+    }
+
     std::ifstream credentialsFile("data/credentials/" + username + "/" + filename + ".txt");
     if (!credentialsFile.is_open()) {
         std::cerr << "Failed to open credentials file." << std::endl;

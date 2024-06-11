@@ -12,8 +12,14 @@
 #include <QtWidgets>
 #include <QDir>
 #include <QFileInfo>
+#include <QMessageBox>
+
+#include <stdio.h>
+#include <vector>
+#include <unordered_set>
 
 #include "./notepadwindow.h"
+#include "./loginwindow.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -29,12 +35,21 @@ public:
 private:
     std::string username;
 private slots:
+    void on_btnNewFile_clicked();
+    void on_btnNewImage_clicked();
+    void renameFile(std::string currentName, int index);
     void openFile(const QString& filePath);
     void deleteFile(const QString& filePath);
+    void on_btnLogout_clicked();
+    void on_btnExit_clicked();
 
 private:
+    std::unordered_set<std::string> filenames;
+    std::vector<QLineEdit*> currentEntryNames;
+    QLineEdit *txtNewName;
     QWidget *centralWidget;
     QGridLayout *layout;
+    std::string directoryPath;
 };
 
 

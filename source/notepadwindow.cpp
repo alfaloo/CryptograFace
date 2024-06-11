@@ -10,6 +10,7 @@ NotepadWindow::NotepadWindow(std::string username, std::string filename, QWidget
         , QMainWindow(parent)
         , ui(new Ui::NotepadWindow) {
     ui->setupUi(this);
+    ui->lblTitle->setText(QString::fromStdString("Notepad: " + filename));
     ui->txtNotepad->setText(QString::fromStdString(decrypt(username, filename)));
 }
 
