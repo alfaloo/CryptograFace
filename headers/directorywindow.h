@@ -14,6 +14,14 @@
 #include <QFileInfo>
 #include <QMessageBox>
 
+#ifdef slots
+#undef slots
+#endif
+
+#include <Python.h>
+
+#define slots Q_SLOTS
+
 #include <stdio.h>
 #include <vector>
 #include <unordered_set>

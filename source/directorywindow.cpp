@@ -187,5 +187,45 @@ void DirectoryWindow::on_btnNewFile_clicked() {
 }
 
 void DirectoryWindow::on_btnNewImage_clicked() {
-    std::cout << "btnNewImage\n";
+
+//    setenv("PYTHONHOME", "/usr/local/bin/python3.11", 1);
+
+    Py_Initialize();
+
+    // Optional: Add the directory containing test.py to the Python path if it's not in the current directory
+    PyRun_SimpleString("import sys");
+    PyRun_SimpleString("sys.path.append('./python_scripts')");
+
+    // Import the module
+    PyObject* pName = PyUnicode_DecodeFSDefault("app");
+    PyObject* pModule = PyImport_Import(pName);
+    Py_DECREF(pName);
+
+    if (pModule != nullptr) {
+        // Get the 'main' function
+        PyObject* pFunc = PyObject_GetAttrString(pModule, "main");
+        if (pFunc && PyCallable_Check(pFunc)) {
+            // Call the function
+            PyObject* pValue = PyObject_CallObject(pFunc, nullptr);
+            if (pValue != nullptr) {
+                // Handle the result of the function here if needed
+                Py_DECREF(pValue);
+            } else {
+                PyErr_Print();
+                fprintf(stderr, "Call failed\n");
+            }
+            Py_DECREF(pFunc);
+        } else {
+            if (PyErr_Occurred())
+                PyErr_Print();
+            fprintf(stderr, "Cannot find function 'main'\n");
+        }
+        Py_DECREF(pModule);
+    } else {
+        PyErr_Print();
+        fprintf(stderr, "Failed to load 'test'\n");
+    }
+
+    // Clean up and close the Python interpreter
+    Py_Finalize();
 }
