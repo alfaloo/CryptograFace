@@ -25,8 +25,12 @@
 #include <stdio.h>
 #include <vector>
 #include <unordered_set>
+#include <fstream>
+#include <iostream>
+#include <string>
 
 #include "./notepadwindow.h"
+#include "./cryptography.h"
 #include "./loginwindow.h"
 
 QT_BEGIN_NAMESPACE
@@ -40,6 +44,7 @@ class DirectoryWindow : public QMainWindow {
 
 public:
     DirectoryWindow(std::string username);
+    ~DirectoryWindow();
 private:
     std::string username;
 private slots:
@@ -52,6 +57,8 @@ private slots:
     void on_btnExit_clicked();
 
 private:
+    void load_canvas_logic(std::string filename);
+
     std::unordered_set<std::string> filenames;
     std::vector<QLineEdit*> currentEntryNames;
     QLineEdit *txtNewName;

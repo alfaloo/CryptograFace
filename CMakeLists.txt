@@ -28,8 +28,8 @@ set(CRYPTO++_LIBRARY "/opt/homebrew/Cellar/cryptopp/8.9.0/lib/libcryptopp.a")
 set(DLIB_INCLUDE_DIR "/opt/homebrew/Cellar/dlib/19.24.4/include")
 set(DLIB_LIBRARY "/opt/homebrew/Cellar/dlib/19.24.4/lib/libdlib.dylib")
 
-set(PYTHON_INCLUDE_DIR "/Library/Frameworks/Python.framework/Versions/3.11/include/python3.11")
-set(PYTHON_LIBRARY "/Library/Frameworks/Python.framework/Versions/3.11/lib/libpython3.11.dylib")
+set(PYTHON_INCLUDE_DIR "/Library/Frameworks/Python.framework/Versions/3.9/include/python3.9")
+set(PYTHON_LIBRARY "/Library/Frameworks/Python.framework/Versions/3.9/lib/libpython3.9.dylib")
 #set(DAISYKIT_LIBRARY "/usr/local/lib/libGenericCodeGen.a")
 #
 #set(DAISYKIT_INCLUDE_DIR "~/github/daisykit/include")

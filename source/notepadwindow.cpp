@@ -11,7 +11,7 @@ NotepadWindow::NotepadWindow(std::string username, std::string filename, QWidget
         , ui(new Ui::NotepadWindow) {
     ui->setupUi(this);
     ui->lblTitle->setText(QString::fromStdString("Notepad: " + filename));
-    ui->txtNotepad->setText(QString::fromStdString(decrypt(username, filename)));
+    ui->txtNotepad->setText(QString::fromStdString(decrypt(username, filename).first));
 }
 
 NotepadWindow::~NotepadWindow() {
@@ -21,7 +21,7 @@ NotepadWindow::~NotepadWindow() {
 void NotepadWindow::on_btnSave_clicked() {
     std::string plain = ui->txtNotepad->toPlainText().toStdString();
 
-    encrypt(username, filename, plain);
+    encrypt(username, filename, plain, "STR");
 
     std::cout << "Notepad Saved\n";
 }
@@ -35,7 +35,7 @@ void NotepadWindow::on_btnExit_clicked() {
 }
 
 void NotepadWindow::autosave(Leave option) {
-    if (decrypt(username, filename) != ui->txtNotepad->toPlainText().toStdString()) {
+    if (decrypt(username, filename).first != ui->txtNotepad->toPlainText().toStdString()) {
         QMessageBox::StandardButton reply =
                 QMessageBox::question(this,
                                       "Exit Confirmation",

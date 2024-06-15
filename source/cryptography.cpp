@@ -6,7 +6,7 @@
 
 namespace fs = std::__fs::filesystem;
 
-bool encrypt(std::string username, std::string filename, std::string plain) {
+bool encrypt(std::string username, std::string filename, std::string plain, std::string type) {
     // Create key and initialisation vector
     CryptoPP::AutoSeededRandomPool prng;
     CryptoPP::SecByteBlock key(CryptoPP::AES::DEFAULT_KEYLENGTH);
@@ -41,7 +41,7 @@ bool encrypt(std::string username, std::string filename, std::string plain) {
         CryptoPP::EAX<CryptoPP::AES>::Encryption e;
         e.SetKeyWithIV(key, key.size(), iv);
 
-        CryptoPP::StringSource(plain, true,
+        CryptoPP::StringSource(type + plain, true,
                                new CryptoPP::AuthenticatedEncryptionFilter(e,
                                                                            new CryptoPP::StringSink(cipher)
                                ) // AuthenticatedEncryptionFilter
@@ -69,15 +69,15 @@ bool encrypt(std::string username, std::string filename, std::string plain) {
     return true;
 }
 
-std::string decrypt(std::string username, std::string filename) {
+std::pair<std::string, std::string> decrypt(std::string username, std::string filename) {
     if (!fs::exists("data/credentials/" + username + "/" + filename + ".txt")) {
-        return "";
+        return {"", ""};
     }
 
     std::ifstream credentialsFile("data/credentials/" + username + "/" + filename + ".txt");
     if (!credentialsFile.is_open()) {
         std::cerr << "Failed to open credentials file." << std::endl;
-        return "";
+        return {"", ""};
     }
 
     std::string encodedKey, encodedIV;
@@ -103,7 +103,7 @@ std::string decrypt(std::string username, std::string filename) {
     std::ifstream cipherFile("data/ciphers/" + username + "/" + filename + ".txt");
     if (!cipherFile.is_open()) {
         std::cerr << "Failed to open cipher file." << std::endl;
-        return "";
+        return {"", ""};
     }
 
     std::string encodedCipher;
@@ -120,8 +120,7 @@ std::string decrypt(std::string username, std::string filename) {
 
     std::string recovered;
 
-    try
-    {
+    try {
         CryptoPP::EAX< CryptoPP::AES >::Decryption d;
         d.SetKeyWithIV(key, key.size(), iv);
 
@@ -130,12 +129,13 @@ std::string decrypt(std::string username, std::string filename) {
                                                                              new CryptoPP::StringSink(recovered)
                                  ) // AuthenticatedDecryptionFilter
         ); // StringSource
-    }
-    catch(const CryptoPP::Exception& e)
-    {
+    } catch(const CryptoPP::Exception& e) {
         std::cerr << e.what() << std::endl;
-        return "";
+        return {"", ""};
     }
 
-    return recovered;
+    std::string type = recovered.substr(0, 3);
+    recovered = recovered.substr(3);
+
+    return {recovered, type};
 }

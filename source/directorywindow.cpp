@@ -103,6 +103,12 @@ DirectoryWindow::DirectoryWindow(std::string username)
     connect(btnExit, &QPushButton::clicked, [this]() {
         on_btnExit_clicked();
     });
+
+    Py_Initialize();
+}
+
+DirectoryWindow::~DirectoryWindow() {
+    Py_Finalize();
 }
 
 void DirectoryWindow::renameFile(std::string currentName, int index) {
@@ -134,9 +140,14 @@ void DirectoryWindow::renameFile(std::string currentName, int index) {
 }
 
 void DirectoryWindow::openFile(const QString& filename) {
-    NotepadWindow* notepadwindow = new NotepadWindow(username, filename.toStdString());
-    notepadwindow->show();
-    this->close();
+    std::pair<std::string, std::string> data = decrypt(username, filename.toStdString());
+    if (data.second == "STR") {
+        NotepadWindow* notepadwindow = new NotepadWindow(username, filename.toStdString());
+        notepadwindow->show();
+        this->close();
+    } else if (data.second == "IMG") {
+        load_canvas_logic(filename.toStdString());
+    }
 }
 
 void DirectoryWindow::deleteFile(const QString& filename) {
@@ -187,17 +198,36 @@ void DirectoryWindow::on_btnNewFile_clicked() {
 }
 
 void DirectoryWindow::on_btnNewImage_clicked() {
+    std::string newName = txtNewName->text().toStdString();
 
-//    setenv("PYTHONHOME", "/usr/local/bin/python3.11", 1);
+    if (newName == "") {
+        QMessageBox::information(this, "Information", "File name can not be empty!");
+        return;
+    } else if (filenames.count(newName)) {
+        QMessageBox::information(this, "Information", "File name already exists!");
+        txtNewName->setText("");
+        return;
+    }
 
-    Py_Initialize();
+    load_canvas_logic(newName);
+}
 
-    // Optional: Add the directory containing test.py to the Python path if it's not in the current directory
+void DirectoryWindow::load_canvas_logic(std::string filename) {
+    // Optional: Add the directory containing the Python script to the Python path
     PyRun_SimpleString("import sys");
     PyRun_SimpleString("sys.path.append('./python_scripts')");
 
+    std::pair<std::string, std::string> content = decrypt(username, filename);
+    std::string inCanvas;
+    if (content.first != "") inCanvas = content.first;
+
+    // Prepare arguments for Python function
+    PyObject* pArgs = PyTuple_New(1);
+    PyObject* pCanvasData = PyBytes_FromStringAndSize(inCanvas.data(), inCanvas.size());
+    PyTuple_SetItem(pArgs, 0, pCanvasData); // PyTuple_SetItem steals a reference, no need to DECREF pCanvasData
+
     // Import the module
-    PyObject* pName = PyUnicode_DecodeFSDefault("app");
+    PyObject* pName = PyUnicode_DecodeFSDefault("hand_gesture_canvas");
     PyObject* pModule = PyImport_Import(pName);
     Py_DECREF(pName);
 
@@ -205,27 +235,37 @@ void DirectoryWindow::on_btnNewImage_clicked() {
         // Get the 'main' function
         PyObject* pFunc = PyObject_GetAttrString(pModule, "main");
         if (pFunc && PyCallable_Check(pFunc)) {
-            // Call the function
-            PyObject* pValue = PyObject_CallObject(pFunc, nullptr);
+            // Call the function with arguments
+            PyObject* pValue = PyObject_CallObject(pFunc, pArgs);
             if (pValue != nullptr) {
-                // Handle the result of the function here if needed
+                // Check if the result is a bytes object
+                if (PyBytes_Check(pValue)) {
+                    char* resultCStr = PyBytes_AS_STRING(pValue);
+                    std::string outCanvas = std::string(resultCStr, PyBytes_GET_SIZE(pValue));
+                    encrypt(username, filename, outCanvas, "IMG");
+                } else {
+                    std::cerr << "Return value is not a bytes object." << std::endl;
+                }
                 Py_DECREF(pValue);
             } else {
                 PyErr_Print();
-                fprintf(stderr, "Call failed\n");
+                std::cerr << "Call failed\n";
             }
             Py_DECREF(pFunc);
         } else {
             if (PyErr_Occurred())
                 PyErr_Print();
-            fprintf(stderr, "Cannot find function 'main'\n");
+            std::cerr << "Cannot find function 'main'\n";
         }
         Py_DECREF(pModule);
     } else {
         PyErr_Print();
-        fprintf(stderr, "Failed to load 'test'\n");
+        std::cerr << "Failed to load 'hand_gesture_canvas'\n";
     }
 
-    // Clean up and close the Python interpreter
-    Py_Finalize();
+    Py_DECREF(pArgs);
+
+    DirectoryWindow* directorywindow = new DirectoryWindow(username);
+    directorywindow->show();
+    this->close();
 }
