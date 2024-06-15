@@ -13,10 +13,11 @@ data/credentials/*
 data/ciphers/*
 !data/ciphers/.gitkeep
 
-.idea
-/cmake-build-debug/
-.qtc_clangd
-.vscode
+.idea/
+cmake-build-debug/
+.qtc_clangd/
+.vscode/
+./python_scripts/__pycache__
 
 
 https://cryptopp.com/wiki/Advanced_Encryption_Standard
