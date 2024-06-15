@@ -17,7 +17,7 @@ data/ciphers/*
 cmake-build-debug/
 .qtc_clangd/
 .vscode/
-./python_scripts/__pycache__
+python_scripts/__pycache__
 
 
 https://cryptopp.com/wiki/Advanced_Encryption_Standard
