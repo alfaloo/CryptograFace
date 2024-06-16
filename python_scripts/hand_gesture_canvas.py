@@ -37,6 +37,7 @@ def main(rawCanvas):
     mpdraw = mp.solutions.drawing_utils
 
     col = [0, 0, 255]  # Default color (red)
+    thickness = 25
 
     prev_x, prev_y = 0, 0
 
@@ -53,14 +54,26 @@ def main(rawCanvas):
         success, frame = cap.read()
         frame = cv.flip(frame, 1)
 
+        frame_height, frame_width, _ = frame.shape
+
         # Draw color selection rectangles
-        rect_height = 100
+        rect_height = int(frame.shape[0] / 10)
         rect_width = int(frame.shape[1] / 8)
         color_rects = [(i * rect_width, 0, rect_width, rect_height, color) for i, color in enumerate(color_options)]
 
         for rect in color_rects:
             x, y, width, height, color = rect
             cv.rectangle(frame, (x, y), (x + width, y + height), color, -1)  # -1 fills the rectangle
+
+        # Define the points of the triangle
+        pt1 = (frame_width, frame_height)
+        pt2 = (frame_width - rect_height, rect_height)
+        pt3 = (frame_width, rect_height)
+
+        # Points must be in a numpy array shaped as ROWSx1x2 for fillPoly
+        triangle_slider = np.array([pt1, pt2, pt3])
+
+        cv.fillPoly(frame, [triangle_slider], (255, 255, 255))
 
         # Convert the frame to RGB color space for hand tracking
         img = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
@@ -89,13 +102,13 @@ def main(rawCanvas):
                 prev_x, prev_y = 0, 0
 
                 col = color_options[int(index_x / rect_width)]
-                #
-                # if 0 < index_x < 144:
-                #     col = (0, 0, 0)
-                # elif 144 < index_x < 288:
-                #     col = (0, 255, 0)
-                # elif 288 < index_x < 432:
-                #     col = (0, 0, 255)
+
+            elif index_x > (frame_width - rect_height):
+
+                # Reset previous position
+                prev_x, prev_y = 0, 0
+
+                thickness = int((frame_height - index_y) / (frame_height - rect_height) * 90 + 10)
 
             elif is_extended(Finger.INDEX, landmarks) and not is_extended(Finger.MIDDLE, landmarks)  and not is_extended(Finger.RING, landmarks)  and not is_extended(Finger.PINKY, landmarks):
                 if prev_x == 0 and prev_y == 0:
@@ -103,11 +116,11 @@ def main(rawCanvas):
 
                 # Draw lines on the canvas when in "drawing mode"
                 if col == (0, 0, 0):
-                    cv.line(frame, (prev_x, prev_y), (index_x, index_y), col, 100, cv.FILLED)
-                    cv.line(canvas, (prev_x, prev_y), (index_x, index_y), col, 100, cv.FILLED)
+                    cv.line(frame, (prev_x, prev_y), (index_x, index_y), col, 2 * thickness, cv.FILLED)
+                    cv.line(canvas, (prev_x, prev_y), (index_x, index_y), col, 2 * thickness, cv.FILLED)
                 else:
-                    cv.line(frame, (prev_x, prev_y), (index_x, index_y), col, 25, cv.FILLED)
-                    cv.line(canvas, (prev_x, prev_y), (index_x, index_y), col, 25, cv.FILLED)
+                    cv.line(frame, (prev_x, prev_y), (index_x, index_y), col, thickness, cv.FILLED)
+                    cv.line(canvas, (prev_x, prev_y), (index_x, index_y), col, thickness, cv.FILLED)
 
                 prev_x, prev_y = index_x, index_y
 
@@ -115,7 +128,7 @@ def main(rawCanvas):
                 # Reset previous position
                 prev_x, prev_y = 0, 0
 
-            cv.circle(frame, (index_x, index_y), 25, col, 2)
+            cv.circle(frame, (index_x, index_y), thickness, col, 2)
 
         # Prepare the canvas for blending with the frame
         imgGray = cv.cvtColor(canvas, cv.COLOR_BGR2GRAY)
