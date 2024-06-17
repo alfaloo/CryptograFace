@@ -45,7 +45,7 @@ def main(rawCanvas):
     if len(rawCanvas) == 0:
         canvas = np.zeros((1080, 1920, 3), dtype=np.uint8)
     else:
-        canvas = np.frombuffer(rawCanvas, dtype=np.uint8).reshape((1080, 1920, 3))
+        canvas = np.copy(np.frombuffer(rawCanvas, dtype=np.uint8).reshape((1080, 1920, 3)))
 
     color_options = [(0, 0, 0), (0, 0, 255), (0, 127, 255), (0, 255, 255), (0, 255, 0), (255, 0, 0), (130, 0, 75), (211, 0, 148)]
 
@@ -92,25 +92,28 @@ def main(rawCanvas):
 
         if len(landmarks) != 0:
 
-            # Check if the hand is in "selection mode" or "drawing mode"
             index_x, index_y = landmarks[8][1], landmarks[8][2]
 
-            # Detect the color chosen by the hand position
+            # Choose color
             if index_y < 100:
-
                 # Reset previous position
                 prev_x, prev_y = 0, 0
 
                 col = color_options[int(index_x / rect_width)]
 
+            # Choose thickness
             elif index_x > (frame_width - rect_height):
-
                 # Reset previous position
                 prev_x, prev_y = 0, 0
 
                 thickness = int((frame_height - index_y) / (frame_height - rect_height) * 90 + 10)
 
-            elif is_extended(Finger.INDEX, landmarks) and not is_extended(Finger.MIDDLE, landmarks)  and not is_extended(Finger.RING, landmarks)  and not is_extended(Finger.PINKY, landmarks):
+            # Draw line
+            elif (is_extended(Finger.INDEX, landmarks) and not
+                  is_extended(Finger.MIDDLE, landmarks) and not
+                  is_extended(Finger.RING, landmarks) and not
+                  is_extended(Finger.PINKY, landmarks)):
+
                 if prev_x == 0 and prev_y == 0:
                     prev_x, prev_y = index_x, index_y
 
@@ -128,7 +131,13 @@ def main(rawCanvas):
                 # Reset previous position
                 prev_x, prev_y = 0, 0
 
-            cv.circle(frame, (index_x, index_y), thickness, col, 2)
+            if col == (0, 0, 0):
+                cv.circle(frame, (index_x, index_y), thickness, col, 2)
+            else:
+                cv.circle(frame, (index_x, index_y), int(thickness / 2), col, 2)
+
+        cv.rectangle(canvas, (0, 0), (frame_width, rect_height), (0, 0, 0), -1)
+        cv.rectangle(canvas, (frame_width - rect_height, rect_height), (frame_width, frame_height), (0, 0, 0), -1)
 
         # Prepare the canvas for blending with the frame
         imgGray = cv.cvtColor(canvas, cv.COLOR_BGR2GRAY)
@@ -136,8 +145,8 @@ def main(rawCanvas):
         imgInv = cv.cvtColor(imgInv, cv.COLOR_GRAY2BGR)
 
         # Use bitwise operations to blend the frame with the canvas
-        imgInv = cv.resize(imgInv, (frame.shape[1], frame.shape[0]))
-        canvas = cv.resize(canvas, (frame.shape[1], frame.shape[0]))
+        imgInv = cv.resize(imgInv, (frame_width, frame_height))
+        canvas = cv.resize(canvas, (frame_width, frame_height))
         frame = cv.bitwise_and(frame, imgInv)
         frame = cv.bitwise_or(frame, canvas)
 

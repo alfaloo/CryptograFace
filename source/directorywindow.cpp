@@ -213,7 +213,7 @@ void DirectoryWindow::on_btnNewImage_clicked() {
 }
 
 void DirectoryWindow::load_canvas_logic(std::string filename) {
-    // Optional: Add the directory containing the Python script to the Python path
+    // Add the directory containing the Python script to the Python path
     PyRun_SimpleString("import sys");
     PyRun_SimpleString("sys.path.append('./python_scripts')");
 
@@ -224,7 +224,7 @@ void DirectoryWindow::load_canvas_logic(std::string filename) {
     // Prepare arguments for Python function
     PyObject* pArgs = PyTuple_New(1);
     PyObject* pCanvasData = PyBytes_FromStringAndSize(inCanvas.data(), inCanvas.size());
-    PyTuple_SetItem(pArgs, 0, pCanvasData); // PyTuple_SetItem steals a reference, no need to DECREF pCanvasData
+    PyTuple_SetItem(pArgs, 0, pCanvasData);
 
     // Import the module
     PyObject* pName = PyUnicode_DecodeFSDefault("hand_gesture_canvas");
@@ -244,23 +244,23 @@ void DirectoryWindow::load_canvas_logic(std::string filename) {
                     std::string outCanvas = std::string(resultCStr, PyBytes_GET_SIZE(pValue));
                     encrypt(username, filename, outCanvas, "IMG");
                 } else {
-                    std::cerr << "Return value is not a bytes object." << std::endl;
+                    std::cerr << "Python return value is not a bytes object." << std::endl;
                 }
                 Py_DECREF(pValue);
             } else {
                 PyErr_Print();
-                std::cerr << "Call failed\n";
+                std::cerr << "Python function call failed\n";
             }
             Py_DECREF(pFunc);
         } else {
             if (PyErr_Occurred())
                 PyErr_Print();
-            std::cerr << "Cannot find function 'main'\n";
+            std::cerr << "Cannot find Python function\n";
         }
         Py_DECREF(pModule);
     } else {
         PyErr_Print();
-        std::cerr << "Failed to load 'hand_gesture_canvas'\n";
+        std::cerr << "Failed to load Python file\n";
     }
 
     Py_DECREF(pArgs);
