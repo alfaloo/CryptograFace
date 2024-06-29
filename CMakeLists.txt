@@ -13,8 +13,6 @@ set(CMAKE_AUTORCC ON)
 # Set the C++ compiler flags for Release build
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
-#find_package(ncnn REQUIRED PATHS "/opt/homebrew/Cellar/ncnn/20240410_1/lib/cmake/ncnn")
-
 # Find OpenCV
 find_package(OpenCV REQUIRED)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Concurrent)
@@ -30,17 +28,11 @@ set(DLIB_LIBRARY "/opt/homebrew/Cellar/dlib/19.24.4/lib/libdlib.dylib")
 
 set(PYTHON_INCLUDE_DIR "/Library/Frameworks/Python.framework/Versions/3.9/include/python3.9")
 set(PYTHON_LIBRARY "/Library/Frameworks/Python.framework/Versions/3.9/lib/libpython3.9.dylib")
-#set(DAISYKIT_LIBRARY "/usr/local/lib/libGenericCodeGen.a")
-#
-#set(DAISYKIT_INCLUDE_DIR "~/github/daisykit/include")
-#set(NCNN_INCLUDE_DIR "/opt/homebrew/Cellar/ncnn/20240410_1/include/ncnn")
 
 include_directories(${OpenCV_INCLUDE_DIRS})
 include_directories(${CRYPTO++_INCLUDE_DIR})
 include_directories(${DLIB_INCLUDE_DIR})
 include_directories(${PYTHON_INCLUDE_DIR})
-#include_directories(${DAISYKIT_INCLUDE_DIR})
-#include_directories(${NCNN_INCLUDE_DIR})
 
 add_executable(Test test.cpp)
 

@@ -73,7 +73,7 @@
                     </rect>
                 </property>
                 <property name="text">
-                    <string>Enable Camera Feed</string>
+                    <string>Enable Live Feed</string>
                 </property>
             </widget>
             <widget class="QPushButton" name="btnExit">
