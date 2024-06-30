@@ -23,7 +23,7 @@ false positives. During user login, the system employs reinforced learning techn
 of facial features. This adaptive approach ensures that the system adapts to changes in user appearance and becomes
 increasingly reliable over time.
 
-![output1.gif](..%2F..%2FLibrary%2FMobile%20Documents%2Fcom%7Eapple%7ECloudDocs%2Ftemp%2Foutput1.gif)
+![facial_authentication_demo](./data/readme_media/facial_authentication_demo.gif)
 
 ### Hand-Tracked Canvas
 
@@ -36,7 +36,7 @@ Cryptograface enables users to paint directly on a digital canvas overlaid on th
 multiple colors and brush sizes to create intricate digital artworks. Moreover, painting progress is automatically saved
 across sessions, with each image securely encrypted to ensure data integrity and privacy.
 
-![output2.gif](..%2F..%2FDesktop%2Foutput2.gif)
+![digital_canvas_demo](./data/readme_media/digital_canvas_demo.gif)
 
 ### Secure Encryption
 
@@ -65,9 +65,9 @@ while dynamic components such as file directories are generated dynamically at r
 management operations such as creation, deletion, and renaming, but it also integrates user-friendly features such as
 pop-up reminders for unsaved content.
 
-![Screenshot 2024-06-29 at 2.52.31 PM.png](..%2F..%2FDesktop%2FScreenshot%202024-06-29%20at%202.52.31%E2%80%AFPM.png)
-![Screenshot 2024-06-29 at 3.00.07 PM.png](..%2F..%2FDesktop%2FScreenshot%202024-06-29%20at%203.00.07%E2%80%AFPM.png)
-![Screenshot 2024-06-29 at 2.54.47 PM.png](..%2F..%2FDesktop%2FScreenshot%202024-06-29%20at%202.54.47%E2%80%AFPM.png)
+![login_window](./data/readme_media/login_window.png)
+![directory_window](./data/readme_media/directory_window.png)
+![notepad_window](./data/readme_media/notepad_window.png)
 
 ## Installation
 
