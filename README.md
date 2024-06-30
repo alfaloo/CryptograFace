@@ -23,6 +23,8 @@ false positives. During user login, the system employs reinforced learning techn
 of facial features. This adaptive approach ensures that the system adapts to changes in user appearance and becomes
 increasingly reliable over time.
 
+![output1.gif](..%2F..%2FLibrary%2FMobile%20Documents%2Fcom%7Eapple%7ECloudDocs%2Ftemp%2Foutput1.gif)
+
 ### Hand-Tracked Canvas
 
 In addition to managing text-based data, CryptograFace also offers a unique hand-tracked virtual drawing canvas feature.
@@ -33,6 +35,8 @@ within the C++ code facilitates real-time hand tracking, enabling precise detect
 Cryptograface enables users to paint directly on a digital canvas overlaid on the live camera feed. Users can select from
 multiple colors and brush sizes to create intricate digital artworks. Moreover, painting progress is automatically saved
 across sessions, with each image securely encrypted to ensure data integrity and privacy.
+
+![output2.gif](..%2F..%2FDesktop%2Foutput2.gif)
 
 ### Secure Encryption
 
