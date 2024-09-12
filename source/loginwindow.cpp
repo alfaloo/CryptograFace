@@ -19,35 +19,30 @@ void LoginWindow::on_btnLogin_clicked() {
     ui->txtUsername->clearFocus();
     this->setFocus();
 
-    if (ui->chbCamera->isChecked()) {
-        btnLogin_logic(true);
+    if (loginAttempts.size() && loginAttempts.front().wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+        loginAttempts.pop();
+    }
+
+    if (loginAttempts.size()) {
+        ui->txtUsername->setText("");
+        std::string info = "[INFO] Login already in progress.";
+        std::cout << info << "\n";
+
+        QString qString = QString::fromStdString(info);
+        ui->txtInfo->append(qString);
+
+        ui->txtInfo->moveCursor(QTextCursor::End);
+        ui->txtInfo->ensureCursorVisible();
+
         return;
+    } else {
+        std::future<void> future = std::async(
+                std::launch::async,
+                [this]() { return this->btnLogin_logic(ui->chbCamera->isChecked()); }
+        );
+
+        loginAttempts.push(std::move(future));
     }
-
-    if (loginAttempts.size() > 0) {
-        if (loginAttempts.front().wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
-            loginAttempts.pop();
-        } else {
-            ui->txtUsername->setText("");
-            std::string info = "[INFO] Login already in progress.";
-            std::cout << info << "\n";
-
-            QString qString = QString::fromStdString(info);
-            ui->txtInfo->append(qString);
-
-            ui->txtInfo->moveCursor(QTextCursor::End);
-            ui->txtInfo->ensureCursorVisible();
-
-            return;
-        }
-    }
-
-    std::future<void> future = std::async(
-        std::launch::async,
-        [this]() { return this->btnLogin_logic(false); }
-    );
-
-    loginAttempts.push(std::move(future));
 }
 
 void LoginWindow::btnLogin_logic(bool showCamera) {
